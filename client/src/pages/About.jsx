@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { RestaurantMenu, LocalShipping, HighQuality, Speed, Group } from "@mui/icons-material";
+import { RestaurantMenu, HighQuality, Speed, Group } from "@mui/icons-material";
 
 const Container = styled.div`
   padding: 40px 30px;

@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { ShieldOutlined, LockOutlined, VisibilityOutlined } from "@mui/icons-material";
+import { ShieldOutlined } from "@mui/icons-material";
 
 const Container = styled.div`
   padding: 40px 30px;

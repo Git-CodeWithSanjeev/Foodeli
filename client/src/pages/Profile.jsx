@@ -9,8 +9,6 @@ import {
   Favorite,
   LocationOn,
   ExitToApp,
-  Email,
-  Edit,
   CheckCircle
 } from "@mui/icons-material";
 import { Avatar } from "@mui/material";

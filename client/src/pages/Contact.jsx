@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { MailOutline, PhoneOutlined, LocationOnOutlined, Send, CheckCircleOutline } from "@mui/icons-material";
+import { MailOutline, PhoneOutlined, LocationOnOutlined, Send } from "@mui/icons-material";
 import { Alert, Snackbar } from "@mui/material";
 
 const Container = styled.div`
