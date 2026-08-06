@@ -18,6 +18,11 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Search from "./pages/Search";
+import TermsConditions from "./pages/TermsConditions";
+import FAQs from "./pages/FAQs";
+import DeliveryInfo from "./pages/DeliveryInfo";
+import RefundPolicy from "./pages/RefundPolicy";
+import PartnerWithUs from "./pages/PartnerWithUs";
 import { Snackbar, Alert } from "@mui/material";
 import { closeSnackbar } from "./redux/reducers/SnackbarSlice";
 
@@ -56,9 +61,18 @@ function AppContent({ setOpenAuth, openAuth }) {
         <Route path="/restaurants/:id" exact element={<RestaurantDetails setOpenAuth={setOpenAuth} />} />
         <Route path="/profile" exact element={<Profile setOpenAuth={setOpenAuth} />} />
         <Route path="/orders" exact element={<Orders />} />
+        <Route path="/track-order" exact element={<Orders />} />
         <Route path="/about" exact element={<About />} />
         <Route path="/contact" exact element={<Contact />} />
         <Route path="/privacy" exact element={<PrivacyPolicy />} />
+        <Route path="/privacy-policy" exact element={<PrivacyPolicy />} />
+        <Route path="/terms" exact element={<TermsConditions />} />
+        <Route path="/faq" exact element={<FAQs />} />
+        <Route path="/faqs" exact element={<FAQs />} />
+        <Route path="/delivery-info" exact element={<DeliveryInfo />} />
+        <Route path="/refund-policy" exact element={<RefundPolicy />} />
+        <Route path="/partner" exact element={<PartnerWithUs />} />
+        <Route path="/partner-with-us" exact element={<PartnerWithUs />} />
         <Route path="/search" exact element={<Search />} />
       </Routes>
       {!isZomatoCustomHeaderPage && <Footer />}
