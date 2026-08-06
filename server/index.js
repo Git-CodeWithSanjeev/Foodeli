@@ -380,31 +380,41 @@ const connectDB = async () => {
     return;
   }
   mongoose.set("strictQuery", true);
-  const targets = [];
   
   const envUri = process.env.MONGODB_URL || "mongodb+srv://Foodeli_Admin:Batman1221@foodeli.k4f3jn8.mongodb.net/?retryWrites=true&w=majority&appName=Foodeli";
-  targets.push({ name: "Configured MONGODB_URL", uri: envUri });
-  targets.push({ name: "Local MongoDB", uri: "mongodb://127.0.0.1:27017/food_delivery" });
 
-  for (const target of targets) {
-    try {
-      console.log(`Attempting to connect to ${target.name}...`);
-      await mongoose.connect(target.uri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 10000,
-        connectTimeoutMS: 10000,
-      });
-      isConnected = true;
-      console.log(`✅ Successfully connected to ${target.name}`);
-      await seedInitialDataIfNeeded();
-      return;
-    } catch (err) {
-      console.log(`⚠️ ${target.name} connection failed: ${err.message}`);
-    }
+  try {
+    console.log("Attempting to connect to MongoDB Atlas...");
+    await mongoose.connect(envUri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000,
+    });
+    isConnected = true;
+    console.log("✅ Successfully connected to MongoDB Atlas");
+    await seedInitialDataIfNeeded();
+    return;
+  } catch (err) {
+    console.log(`⚠️ MongoDB Atlas connection failed: ${err.message}`);
   }
 
   if (!process.env.VERCEL) {
+    try {
+      console.log("Attempting Local MongoDB...");
+      await mongoose.connect("mongodb://127.0.0.1:27017/food_delivery", {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 3000,
+      });
+      isConnected = true;
+      console.log("✅ Connected to Local MongoDB");
+      await seedInitialDataIfNeeded();
+      return;
+    } catch (locErr) {
+      console.log(`⚠️ Local MongoDB failed: ${locErr.message}`);
+    }
+
     console.log("🚀 Starting In-Memory MongoDB Server...");
     try {
       const mongoServer = await MongoMemoryServer.create({

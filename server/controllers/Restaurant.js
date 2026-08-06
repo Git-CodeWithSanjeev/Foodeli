@@ -41,25 +41,32 @@ export const getNearbyRestaurants = async (req, res, next) => {
     const userLat = lat ? parseFloat(lat) : 25.4358; // Default Allahabad / Prayagraj lat
     const userLng = lng ? parseFloat(lng) : 81.8463; // Default Allahabad / Prayagraj lng
 
-    // Attempt live places fetch if city or coordinates provided
+    const escapeRegex = (str) => (str ? str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : "");
+
+    // Attempt live places fetch safely without throwing 500 on failure
     if (city || search) {
-      await fetchLivePlacesFromAPI(city || "Allahabad", userLat, userLng);
+      try {
+        await fetchLivePlacesFromAPI(city || "Allahabad", userLat, userLng);
+      } catch (placeErr) {
+        console.error("fetchLivePlacesFromAPI failed gracefully:", placeErr.message);
+      }
     }
 
     let filter = {};
 
     if (search) {
+      const safeSearch = escapeRegex(search);
       filter.$or = [
-        { name: { $regex: new RegExp(search, "i") } },
-        { address: { $regex: new RegExp(search, "i") } },
-        { cuisine: { $in: [new RegExp(search, "i")] } },
+        { name: { $regex: new RegExp(safeSearch, "i") } },
+        { address: { $regex: new RegExp(safeSearch, "i") } },
+        { cuisine: { $in: [new RegExp(safeSearch, "i")] } },
       ];
     }
     if (cuisine) {
-      filter.cuisine = { $in: [new RegExp(cuisine, "i")] };
+      filter.cuisine = { $in: [new RegExp(escapeRegex(cuisine), "i")] };
     }
     if (city) {
-      filter.city = { $regex: new RegExp(city, "i") };
+      filter.city = { $regex: new RegExp(escapeRegex(city), "i") };
     }
     if (isPureVeg === "true") {
       filter.isPureVeg = true;

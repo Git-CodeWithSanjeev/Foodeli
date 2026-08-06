@@ -35,29 +35,31 @@ export const addProducts = async (req, res, next) => {
 export const getFoodItems = async (req, res, next) => {
   try {
     let { categories, minPrice, maxPrice, ingredients, search, popular } = req.query;
-    ingredients = ingredients?.split(",");
-    categories = categories?.split(",");
+    ingredients = ingredients ? ingredients.split(",").filter(Boolean) : null;
+    categories = categories ? categories.split(",").filter(Boolean) : null;
 
     const filter = {};
-    if (categories && Array.isArray(categories)) {
+    if (categories && Array.isArray(categories) && categories.length > 0) {
       filter.category = { $in: categories };
     }
-    if (ingredients && Array.isArray(ingredients)) {
+    if (ingredients && Array.isArray(ingredients) && ingredients.length > 0) {
       filter.ingredients = { $in: ingredients };
     }
     if (maxPrice || minPrice) {
       filter["price.org"] = {};
-      if (minPrice) {
+      if (minPrice && !isNaN(parseFloat(minPrice))) {
         filter["price.org"]["$gte"] = parseFloat(minPrice);
       }
-      if (maxPrice) {
+      if (maxPrice && !isNaN(parseFloat(maxPrice))) {
         filter["price.org"]["$lte"] = parseFloat(maxPrice);
       }
     }
     if (search) {
+      const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const safeSearch = escapeRegex(search);
       filter.$or = [
-        { name: { $regex: new RegExp(search, "i") } },
-        { desc: { $regex: new RegExp(search, "i") } },
+        { name: { $regex: new RegExp(safeSearch, "i") } },
+        { desc: { $regex: new RegExp(safeSearch, "i") } },
       ];
     }
 
