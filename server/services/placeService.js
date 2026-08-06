@@ -274,7 +274,7 @@ const fetchFromGeoapify = async (lat, lng, cityName) => {
   try {
     const url = `https://api.geoapify.com/v2/places?categories=catering.restaurant,catering.fast_food,catering.cafe&filter=circle:${lng},${lat},5000&limit=20&apiKey=${apiKey}`;
     console.log(`🌐 Geoapify API: Fetching real restaurants near ${cityName}...`);
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(3500) });
     if (!res.ok) throw new Error(`Geoapify HTTP ${res.status}`);
     const data = await res.json();
 
@@ -313,7 +313,7 @@ const fetchFromOpenStreetMap = async (cityName, lat, lng) => {
     console.log(`🗺️  OSM Nominatim: Fetching real restaurants in ${searchCity}...`);
     const res = await fetch(url, {
       headers: { "User-Agent": "Foodeli-App/2.0 (foodeli@example.com)" },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(3500),
     });
     if (!res.ok) return [];
     const data = await res.json();

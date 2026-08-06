@@ -12,13 +12,14 @@ const Card = styled.div`
   flex-direction: column;
   gap: 12px;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
   border: 1px solid transparent;
+  animation: fadeInUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 
   &:hover {
-    border-color: #e8e8e8;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    transform: translateY(-4px);
+    border-color: #e0e0e0;
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
+    transform: translateY(-6px);
   }
 
   @media (max-width: 768px) {
@@ -39,10 +40,10 @@ const Image = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.4s ease;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 
   ${Card}:hover & {
-    transform: scale(1.04);
+    transform: scale(1.08);
   }
 `;
 

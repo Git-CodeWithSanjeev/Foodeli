@@ -68,7 +68,12 @@ const CircleImg = styled.img`
   border-radius: 50%;
   object-fit: cover;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease;
+
+  ${CircleFoodItem}:hover & {
+    transform: translateY(-6px) scale(1.08);
+    box-shadow: 0 12px 24px rgba(226, 55, 68, 0.2);
+  }
 
   @media (max-width: 768px) {
     width: 90px;
@@ -105,11 +110,12 @@ const BrandCard = styled.div`
   gap: 10px;
   cursor: pointer;
   border: 1px solid #f0f0f0;
-  transition: transform 0.2s ease;
+  transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    border-color: #e23744;
   }
 `;
 

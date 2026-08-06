@@ -4,7 +4,7 @@ import { store } from "../redux/store";
 
 const API = axios.create({
   baseURL: process.env.REACT_APP_API_URL || "/api/",
-  timeout: 15000,
+  timeout: 45000,
 });
 
 // Attach auth token to every request automatically
