@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import TextInput from "./TextInput";
 import Button from "./Button";
+import BrandLogo from "./BrandLogo";
 import { useDispatch } from "react-redux";
 import { UserSignIn } from "../api";
 import { loginSuccess } from "../redux/reducers/UserSlice";
@@ -94,8 +95,9 @@ const SignIn = ({ setOpenAuth }) => {
 
   return (
     <Container>
-      <div>
-        <Title>Welcome to Foodeli 👋</Title>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <BrandLogo size="32px" />
+        <Title style={{ marginTop: 4 }}>Welcome to Foodeli 👋</Title>
         <Span>Please login with your details here</Span>
       </div>
       <div style={{ display: "flex", gap: "20px", flexDirection: "column" }}>

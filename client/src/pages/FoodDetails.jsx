@@ -3,15 +3,15 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import Button from "../components/Button";
 import {
-  FavoriteBorder,
   FavoriteBorderOutlined,
   FavoriteRounded,
+  ShoppingCartOutlined,
+  FlashOn,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   addToCart,
   addToFavourite,
-  deleteFromCart,
   deleteFromFavourite,
   getFavourite,
   getProductDetails,
@@ -21,45 +21,47 @@ import { openSnackbar } from "../redux/reducers/SnackbarSlice";
 import { useDispatch } from "react-redux";
 
 const Container = styled.div`
-  padding: 20px 30px;
-  height: 100%;
+  padding: 40px 30px;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   flex-direction: column;
   gap: 30px;
+  background: ${({ theme }) => theme.bg || "#fafafa"};
   @media (max-width: 768px) {
     padding: 20px 16px;
   }
-  background: ${({ theme }) => theme.bg};
 `;
 
 const Wrapper = styled.div`
   width: 100%;
   flex: 1;
-  max-width: 1400px;
+  max-width: 1200px;
   display: flex;
-  gap: 40px;
+  gap: 48px;
   justify-content: center;
-  @media only screen and (max-width: 700px) {
+  @media only screen and (max-width: 850px) {
     flex-direction: column;
     gap: 32px;
   }
 `;
 
 const ImagesWrapper = styled.div`
-  flex: 0.7;
+  flex: 0.8;
   display: flex;
   justify-content: center;
 `;
+
 const Image = styled.img`
-  max-width: 500px;
+  max-width: 520px;
   width: 100%;
-  max-height: 500px;
-  border-radius: 12px;
+  max-height: 480px;
+  border-radius: 16px;
   object-fit: cover;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
   @media (max-width: 768px) {
-    max-width: 400px;
-    height: 400px;
+    max-width: 100%;
+    height: 320px;
   }
 `;
 
@@ -74,9 +76,12 @@ const Details = styled.div`
 const RestaurantSection = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px 0;
-  border-top: 1px solid ${({ theme }) => theme.text_secondary + 20};
+  gap: 10px;
+  padding: 18px 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #eef0f2;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 `;
 
 const RestaurantHeader = styled.div`
@@ -86,93 +91,141 @@ const RestaurantHeader = styled.div`
 `;
 
 const RestaurantName = styled.div`
-  font-size: 20px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text_primary};
+  font-size: 18px;
+  font-weight: 700;
+  color: #1c1c1c;
 `;
 
 const RestaurantInfo = styled.div`
   display: flex;
-  gap: 16px;
+  gap: 12px;
+  align-items: center;
 `;
 
 const InfoItem = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 14px;
-  color: ${({ theme }) => theme.text_secondary};
+  font-size: 13px;
+  color: #666;
 `;
 
 const CuisineTag = styled.div`
-  background: ${({ theme }) => theme.primary + 15};
-  color: ${({ theme }) => theme.primary};
+  background: #fff5f5;
+  color: #e23744;
   padding: 4px 12px;
   border-radius: 12px;
-  font-size: 14px;
+  font-size: 12px;
+  font-weight: 700;
 `;
-const Title = styled.div`
-  font-size: 28px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text_primary};
+
+const Title = styled.h1`
+  font-size: 32px;
+  font-weight: 800;
+  color: #1c1c1c;
+  margin: 0;
 `;
-const Desc = styled.div`
-  font-size: 16px;
-  font-weight: 400;
-  color: ${({ theme }) => theme.text_primary};
+
+const Desc = styled.p`
+  font-size: 15px;
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
 `;
+
 const Price = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 22px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text_primary};
-`;
-const Span = styled.div`
-  font-size: 16px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text_secondary + 60};
-  text-decoration: line-through;
-  text-decoration-color: ${({ theme }) => theme.text_secondary + 50};
+  gap: 10px;
+  font-size: 26px;
+  font-weight: 800;
+  color: #e23744;
 `;
 
-const Percent = styled.div`
+const Span = styled.span`
   font-size: 16px;
   font-weight: 500;
-  color: green;
+  color: #999;
+  text-decoration: line-through;
+`;
+
+const Percent = styled.span`
+  font-size: 14px;
+  font-weight: 700;
+  color: #27ae60;
+`;
+
+const QtySelector = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1.5px solid #e23744;
+  border-radius: 8px;
+  overflow: hidden;
+  width: fit-content;
+  margin-top: 8px;
+`;
+
+const QtyBtn = styled.button`
+  width: 36px;
+  height: 36px;
+  background: #ffffff;
+  border: none;
+  font-size: 18px;
+  font-weight: 700;
+  color: #e23744;
+  cursor: pointer;
+
+  &:hover {
+    background: #fff5f5;
+  }
+`;
+
+const QtyVal = styled.div`
+  width: 44px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  color: #1c1c1c;
+  background: #fff8f8;
 `;
 
 const Ingridents = styled.div`
-  font-size: 16px;
-  font-weight: 500;
-  diaplay: flex;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1c1c1c;
+  display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 10px;
 `;
+
 const Items = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
 `;
+
 const Item = styled.div`
-  background: ${({ theme }) => theme.primary + 20};
-  color: ${({ theme }) => theme.primary};
-  font-size: 14px;
-  padding: 4px 12px;
-  display: flex;
-  border-radius: 12px;
-  align-items: center;
-  justify-content: center;
+  background: #f1f3f5;
+  color: #333;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
 `;
 
 const ButtonWrapper = styled.div`
   display: flex;
-  gap: 16px;
-  padding: 32px 0px;
+  gap: 14px;
+  padding: 20px 0px;
+  align-items: center;
+
   @media only screen and (max-width: 700px) {
+    flex-direction: column;
     gap: 12px;
-    padding: 12px 0px;
   }
 `;
 
@@ -186,6 +239,7 @@ const FoodDetails = () => {
   const [loading, setLoading] = useState(false);
   const [product, setProduct] = useState();
   const [restaurant, setRestaurant] = useState(null);
+  const [quantity, setQuantity] = useState(1);
 
   const getProduct = async () => {
     setLoading(true);
@@ -215,6 +269,7 @@ const FoodDetails = () => {
     try {
       await deleteFromFavourite({ productId: id });
       setFavorite(false);
+      dispatch(openSnackbar({ message: "Removed from favorites", severity: "info" }));
     } catch (err) {
       dispatch(
         openSnackbar({
@@ -232,6 +287,7 @@ const FoodDetails = () => {
     try {
       await addToFavourite({ productId: id });
       setFavorite(true);
+      dispatch(openSnackbar({ message: "Added to favorites ♥", severity: "success" }));
     } catch (err) {
       dispatch(
         openSnackbar({
@@ -245,12 +301,12 @@ const FoodDetails = () => {
   };
 
   const checkFavorite = async () => {
-    const token = localStorage.getItem("foodeli-app-token");
+    const token = localStorage.getItem("foodeli-app-token") || localStorage.getItem("krist-app-token");
     if (!token) return;
     setFavoriteLoading(true);
     try {
       const res = await getFavourite();
-      const isFav = res.data?.some((fav) => fav._id === id);
+      const isFav = res.data?.some((fav) => fav._id === id || fav.product?._id === id);
       setFavorite(isFav);
     } catch (err) {
       console.error("Favorite status check error:", err);
@@ -265,13 +321,47 @@ const FoodDetails = () => {
     checkFavorite();
   }, [id]);
 
-  const addCart = async () => {
+  /* ── Add to Cart (stays on page with success toast) ── */
+  const handleAddToCart = async () => {
+    const token = localStorage.getItem("foodeli-app-token") || localStorage.getItem("krist-app-token");
+    if (!token) {
+      dispatch(openSnackbar({ message: "Please sign in to add items to cart", severity: "warning" }));
+      return;
+    }
     setCartLoading(true);
     try {
-      await addToCart({ productId: id, quantity: 1 });
+      await addToCart({ productId: id, quantity });
       dispatch(
         openSnackbar({
-          message: "Added to cart successfully",
+          message: `Added ${quantity} item${quantity > 1 ? "s" : ""} to cart 🎉`,
+          severity: "success",
+        })
+      );
+    } catch (err) {
+      dispatch(
+        openSnackbar({
+          message: err.response?.data?.message || "Failed to add to cart",
+          severity: "error",
+        })
+      );
+    } finally {
+      setCartLoading(false);
+    }
+  };
+
+  /* ── FULLY FUNCTIONAL ORDER NOW (adds to cart & redirects to checkout) ── */
+  const handleOrderNow = async () => {
+    const token = localStorage.getItem("foodeli-app-token") || localStorage.getItem("krist-app-token");
+    if (!token) {
+      dispatch(openSnackbar({ message: "Please sign in to place an order", severity: "warning" }));
+      return;
+    }
+    setCartLoading(true);
+    try {
+      await addToCart({ productId: id, quantity });
+      dispatch(
+        openSnackbar({
+          message: "Item added! Redirecting to checkout...",
           severity: "success",
         })
       );
@@ -279,7 +369,7 @@ const FoodDetails = () => {
     } catch (err) {
       dispatch(
         openSnackbar({
-          message: err.response?.data?.message || err.message,
+          message: err.response?.data?.message || "Failed to place order",
           severity: "error",
         })
       );
@@ -291,7 +381,7 @@ const FoodDetails = () => {
   return (
     <Container>
       {loading ? (
-        <CircularProgress />
+        <CircularProgress style={{ margin: "80px auto", color: "#e23744" }} />
       ) : (
         <Wrapper>
           <ImagesWrapper>
@@ -308,22 +398,37 @@ const FoodDetails = () => {
             <div>
               <Title>{product?.name}</Title>
             </div>
-            <Rating value={3.5} />
+
+            <Rating value={product?.rating || 4.2} precision={0.1} readOnly />
+
             <Price>
-              ₹{product?.price?.org} <Span>₹{product?.price?.mrp}</Span>{" "}
-              <Percent> (₹{product?.price?.off}% Off) </Percent>
+              ₹{product?.price?.org || 199}{" "}
+              {product?.price?.mrp && <Span>₹{product.price.mrp}</Span>}
+              {product?.price?.off && <Percent>({product.price.off}% Off)</Percent>}
             </Price>
 
             <Desc>{product?.desc}</Desc>
 
-            <Ingridents>
-              Ingridents
-              <Items>
-                {product?.ingredients.map((ingredient) => (
-                  <Item key={ingredient}>{ingredient}</Item>
-                ))}
-              </Items>
-            </Ingridents>
+            {/* Quantity Selector */}
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 700, color: "#555" }}>Quantity</label>
+              <QtySelector>
+                <QtyBtn onClick={() => setQuantity((q) => Math.max(1, q - 1))}>−</QtyBtn>
+                <QtyVal>{quantity}</QtyVal>
+                <QtyBtn onClick={() => setQuantity((q) => q + 1)}>+</QtyBtn>
+              </QtySelector>
+            </div>
+
+            {product?.ingredients?.length > 0 && (
+              <Ingridents>
+                Ingredients
+                <Items>
+                  {product.ingredients.map((ingredient) => (
+                    <Item key={ingredient}>{ingredient}</Item>
+                  ))}
+                </Items>
+              </Ingridents>
+            )}
 
             {restaurant && (
               <RestaurantSection>
@@ -331,8 +436,8 @@ const FoodDetails = () => {
                   <RestaurantName>{restaurant.name}</RestaurantName>
                   <RestaurantInfo>
                     <InfoItem>
-                      <Rating value={restaurant.rating || 0} size="small" readOnly />
-                      {restaurant.rating}
+                      <Rating value={restaurant.rating || 4.5} size="small" readOnly />
+                      {restaurant.rating || 4.5}
                     </InfoItem>
                     {restaurant.cuisine?.map((cuisine) => (
                       <CuisineTag key={cuisine}>{cuisine}</CuisineTag>
@@ -340,29 +445,35 @@ const FoodDetails = () => {
                   </RestaurantInfo>
                 </RestaurantHeader>
                 <InfoItem>{restaurant.address}</InfoItem>
-                <InfoItem>Opening Hours: {restaurant.openingHours}</InfoItem>
-                <InfoItem>Contact: {restaurant.contactNumber}</InfoItem>
+                <InfoItem>Opening Hours: {restaurant.openingHours || "10:00 AM - 11:00 PM"}</InfoItem>
+                <InfoItem>Contact: {restaurant.contactNumber || "+91 98765 43210"}</InfoItem>
               </RestaurantSection>
             )}
 
             <ButtonWrapper>
               <Button
                 text="Add to Cart"
+                leftIcon={<ShoppingCartOutlined style={{ fontSize: 18 }} />}
                 full
                 outlined
                 isLoading={cartLoading}
-                onClick={() => addCart()}
+                onClick={handleAddToCart}
               />
-              <Button text="Order Now" full />
+              <Button
+                text="Order Now"
+                leftIcon={<FlashOn style={{ fontSize: 18 }} />}
+                full
+                isLoading={cartLoading}
+                onClick={handleOrderNow}
+              />
               <Button
                 leftIcon={
                   favorite ? (
-                    <FavoriteRounded sx={{ fontSize: "22px", color: "red" }} />
+                    <FavoriteRounded sx={{ fontSize: "22px", color: "#e23744" }} />
                   ) : (
                     <FavoriteBorderOutlined sx={{ fontSize: "22px" }} />
                   )
                 }
-                full
                 outlined
                 isLoading={favoriteLoading}
                 onClick={() => (favorite ? removeFavourite() : addFavourite())}

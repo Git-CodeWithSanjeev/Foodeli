@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -14,7 +14,9 @@ import {
 import { Avatar } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../redux/reducers/UserSlice";
-import { getAllProducts } from "../api";
+import { openSnackbar } from "../redux/reducers/SnackbarSlice";
+import { getAllProducts, getCart } from "../api";
+import BrandLogo from "./BrandLogo";
 
 const HeaderContainer = styled.header`
   width: 100%;
@@ -39,18 +41,6 @@ const HeaderInner = styled.div`
     padding: 12px 14px;
     flex-wrap: wrap;
   }
-`;
-
-const Logo = styled(Link)`
-  font-size: 30px;
-  font-weight: 900;
-  color: #e23744;
-  text-decoration: none;
-  font-style: italic;
-  letter-spacing: -1px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
 `;
 
 const SearchLocationGroup = styled.div`
@@ -252,6 +242,20 @@ const ZomatoHeader = ({ selectedCity, setSelectedCity, setOpenAuth }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCartCount = async () => {
+      const token = localStorage.getItem("foodeli-app-token") || localStorage.getItem("krist-app-token");
+      if (!token) return;
+      try {
+        const res = await getCart();
+        const valid = (res.data || []).filter((item) => item && item.product);
+        setCartCount(valid.length);
+      } catch (_) {}
+    };
+    fetchCartCount();
+  }, []);
 
   const filteredCities = INDIAN_CITIES.filter((c) =>
     c.toLowerCase().includes(citySearch.toLowerCase())
@@ -278,25 +282,64 @@ const ZomatoHeader = ({ selectedCity, setSelectedCity, setOpenAuth }) => {
     navigate(`/dishes/${dishId}`);
   };
 
-  const handleDetectGPS = () => {
+  const handleDetectGPS = async () => {
+    setShowDropdown(false);
+    dispatch(openSnackbar({ message: "Detecting your location...", severity: "info" }));
+
+    const detectByIP = async () => {
+      try {
+        const ipRes = await fetch("https://ipapi.co/json/");
+        const ipData = await ipRes.json();
+        const city = ipData.city || "Allahabad / Prayagraj";
+        setSelectedCity(city);
+        localStorage.setItem("foodeli-user-city", city);
+        dispatch(openSnackbar({ message: `📍 Location detected: ${city}`, severity: "success" }));
+      } catch (err) {
+        const fallbackCity = "Allahabad / Prayagraj";
+        setSelectedCity(fallbackCity);
+        localStorage.setItem("foodeli-user-city", fallbackCity);
+        dispatch(openSnackbar({ message: `📍 Location set to ${fallbackCity}`, severity: "info" }));
+      }
+    };
+
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setSelectedCity(`GPS (${pos.coords.latitude.toFixed(2)}°, ${pos.coords.longitude.toFixed(2)}°)`);
-          setShowDropdown(false);
+        async (pos) => {
+          try {
+            const { latitude, longitude } = pos.coords;
+            const geoRes = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+            );
+            const geoData = await geoRes.json();
+            const city =
+              geoData.address?.city ||
+              geoData.address?.town ||
+              geoData.address?.suburb ||
+              geoData.address?.state_district ||
+              "Allahabad / Prayagraj";
+
+            setSelectedCity(city);
+            localStorage.setItem("foodeli-user-city", city);
+            dispatch(openSnackbar({ message: `📍 Location detected: ${city}`, severity: "success" }));
+          } catch (_) {
+            await detectByIP();
+          }
         },
-        () => {
-          setSelectedCity("Allahabad / Prayagraj");
-          setShowDropdown(false);
-        }
+        async (err) => {
+          console.warn("GPS error:", err);
+          await detectByIP();
+        },
+        { timeout: 6000, enableHighAccuracy: true }
       );
+    } else {
+      await detectByIP();
     }
   };
 
   return (
     <HeaderContainer>
       <HeaderInner>
-        <Logo to="/">foodeli</Logo>
+        <BrandLogo />
 
         <SearchLocationGroup>
           <LocationSelector onClick={() => setShowDropdown(!showDropdown)}>
@@ -385,8 +428,29 @@ const ZomatoHeader = ({ selectedCity, setSelectedCity, setOpenAuth }) => {
           <NavItemLink to="/favourites">
             <FavoriteBorder style={{ fontSize: "22px" }} />
           </NavItemLink>
-          <NavItemLink to="/cart">
+          <NavItemLink to="/cart" style={{ position: "relative" }}>
             <ShoppingCartOutlined style={{ fontSize: "22px" }} />
+            {cartCount > 0 && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: -6,
+                  right: -8,
+                  background: "#e23744",
+                  color: "#ffffff",
+                  fontSize: "10px",
+                  fontWeight: 800,
+                  borderRadius: "50%",
+                  width: 18,
+                  height: 18,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {cartCount}
+              </span>
+            )}
           </NavItemLink>
           <NavItemLink to="/orders">
             <ShoppingBagOutlined style={{ fontSize: "22px" }} />

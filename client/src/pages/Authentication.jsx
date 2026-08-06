@@ -1,8 +1,8 @@
 import { Modal } from "@mui/material";
 import React, { useState } from "react";
 import styled from "styled-components";
-import LogoImage from "../utils/Images/Logo.png";
 import AuthImage from "../utils/Images/AuthImage.jpg";
+import BrandLogo from "../components/BrandLogo";
 import { Close } from "@mui/icons-material";
 import SignIn from "../components/SignIn";
 import SignUp from "../components/SignUp";
@@ -21,7 +21,7 @@ const Left = styled.div`
   }
 `;
 
-const Logo = styled.img`
+const Logo = styled.div`
   position: absolute;
   top: 40px;
   left: 60px;
@@ -89,7 +89,7 @@ const Authentication = ({ openAuth, setOpenAuth }) => {
     <Modal open={openAuth} onClose={() => setOpenAuth(false)}>
       <Container>
         <Left>
-          <Logo src={LogoImage} />
+          <Logo><BrandLogo size="36px" /></Logo>
           <Image src={AuthImage} />
         </Left>
         <Right>

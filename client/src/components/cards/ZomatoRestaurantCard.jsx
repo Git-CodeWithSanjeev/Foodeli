@@ -1,24 +1,25 @@
 import React from "react";
 import styled from "styled-components";
-import { Star, AccessTime, LocationOn } from "@mui/icons-material";
+import { Star, AccessTime, ArrowForward } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
 const Card = styled.div`
   width: 360px;
   background: #ffffff;
   border-radius: 16px;
-  padding: 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   cursor: pointer;
   transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
-  border: 1px solid transparent;
+  border: 1px solid #eef0f2;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   animation: fadeInUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 
   &:hover {
-    border-color: #e0e0e0;
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
+    border-color: #e23744;
+    box-shadow: 0 14px 32px rgba(226, 55, 68, 0.12);
     transform: translateY(-6px);
   }
 
@@ -68,12 +69,12 @@ const TopTag = styled.div`
   position: absolute;
   top: 12px;
   left: 12px;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
   color: #ffffff;
   font-size: 10px;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 4px 9px;
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -87,8 +88,9 @@ const VegTag = styled.div`
   color: #ffffff;
   font-size: 11px;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 `;
 
 const Details = styled.div`
@@ -119,12 +121,12 @@ const RatingBadge = styled.div`
   background: #24963f;
   color: #ffffff;
   font-size: 13px;
-  font-weight: 700;
-  padding: 2px 7px;
+  font-weight: 800;
+  padding: 3px 8px;
   border-radius: 6px;
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   flex-shrink: 0;
 `;
 
@@ -144,15 +146,15 @@ const CuisineText = styled.span`
 `;
 
 const CostText = styled.span`
-  font-weight: 500;
-  color: #363636;
+  font-weight: 600;
+  color: #1c1c1c;
 `;
 
 const FooterRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 8px;
+  padding-top: 10px;
   border-top: 1px solid #f4f4f4;
   font-size: 12px;
   color: #696969;
@@ -164,14 +166,21 @@ const TimeTag = styled.div`
   align-items: center;
   gap: 4px;
   color: #1c1c1c;
-  font-weight: 600;
+  font-weight: 700;
 `;
 
-const DistanceTag = styled.div`
+const OrderCta = styled.div`
   display: flex;
   align-items: center;
-  gap: 3px;
-  color: #9c9c9c;
+  gap: 4px;
+  color: #e23744;
+  font-weight: 700;
+  font-size: 13px;
+  transition: transform 0.2s ease;
+
+  ${Card}:hover & {
+    transform: translateX(4px);
+  }
 `;
 
 const ZomatoRestaurantCard = ({ restaurant }) => {
@@ -210,12 +219,12 @@ const ZomatoRestaurantCard = ({ restaurant }) => {
           <Name>{restaurant.name}</Name>
           <RatingBadge>
             {restaurant.rating || 4.2}
-            <Star style={{ fontSize: "12px" }} />
+            <Star style={{ fontSize: "13px" }} />
           </RatingBadge>
         </HeaderRow>
 
         <CuisineCostRow>
-          <CuisineText>{restaurant.cuisine?.join(", ")}</CuisineText>
+          <CuisineText>{restaurant.cuisine?.join(", ") || "North Indian, Fast Food"}</CuisineText>
           <CostText>₹{restaurant.costForTwo || 300} for two</CostText>
         </CuisineCostRow>
 
@@ -224,10 +233,9 @@ const ZomatoRestaurantCard = ({ restaurant }) => {
             <AccessTime style={{ fontSize: "14px", color: "#e23744" }} />
             {restaurant.deliveryTime || "25 min"}
           </TimeTag>
-          <DistanceTag>
-            <LocationOn style={{ fontSize: "14px" }} />
-            {restaurant.distance ? `${restaurant.distance} km` : "1.2 km"}
-          </DistanceTag>
+          <OrderCta>
+            Order Online <ArrowForward style={{ fontSize: "14px" }} />
+          </OrderCta>
         </FooterRow>
       </Details>
     </Card>

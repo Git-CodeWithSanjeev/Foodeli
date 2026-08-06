@@ -4,7 +4,8 @@ import { CircularProgress, Rating } from "@mui/material";
 import {
   FavoriteBorder,
   FavoriteRounded,
-  ShoppingBagOutlined,
+  ShoppingCartOutlined,
+  FlashOn,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import {
@@ -17,153 +18,171 @@ import { useDispatch } from "react-redux";
 import { openSnackbar } from "../../redux/reducers/SnackbarSlice";
 
 const Card = styled.div`
-  width: 300px;
+  width: 290px;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #eef0f2;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  transition: all 0.3s ease-out;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   cursor: pointer;
-  @media (max-width: 600px) {
-    width: 180px;
+
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
+    border-color: #e23744;
   }
+
+  @media (max-width: 600px) {
+    width: 100%;
+  }
+`;
+
+const Top = styled.div`
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
 `;
 
 const Image = styled.img`
   width: 100%;
-  height: 300px;
-  border-radius: 6px;
+  height: 100%;
   object-fit: cover;
-  transition: all 0.3s ease-out;
-  cursor: pointer;
-  @media (max-width: 600px) {
-    height: 180px;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  ${Card}:hover & {
+    transform: scale(1.08);
   }
 `;
 
-const Menu = styled.div`
+const FavoriteBtn = styled.div`
   position: absolute;
-  z-index: 10;
-  color: ${({ theme }) => theme.text_primary};
-  top: 14px;
-  right: 14px;
-  display: none;
-  flex-direction: column;
-  gap: 12px;
-`;
-
-const Top = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  border-radius: 6px;
-  transition: all 0.3s ease-out;
-  &:hover {
-    background-color: ${({ theme }) => theme.black};
-  }
-
-  &:hover ${Image} {
-    opacity: 0.9;
-  }
-  &:hover ${Menu} {
-    display: flex;
-  }
-`;
-
-const MenuItem = styled.div`
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  background: white;
-  padding: 8px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 200;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
 `;
 
-const Rate = styled.div`
+const RateBadge = styled.div`
   position: absolute;
-  z-index: 10;
-  color: ${({ theme }) => theme.text_primary};
-  bottom: 8px;
-  left: 8px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background: white;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 4px 10px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
-  opacity: 0.9;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1c1c1c;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 `;
 
 const Details = styled.div`
+  padding: 16px;
   display: flex;
-  gap: 6px;
   flex-direction: column;
-  padding: 4px 10px;
+  gap: 8px;
+  flex: 1;
 `;
 
-const RestaurantInfo = styled.div`
+const Title = styled.h3`
+  font-size: 16px;
+  font-weight: 700;
+  color: #1c1c1c;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const Desc = styled.p`
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+`;
+
+const PriceRow = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
   margin-top: 4px;
 `;
 
-const RestaurantName = styled.div`
-  font-size: 14px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text_secondary};
+const OrgPrice = styled.span`
+  font-size: 17px;
+  font-weight: 800;
+  color: #e23744;
 `;
 
-const Cuisine = styled.div`
+const MrpPrice = styled.span`
+  font-size: 13px;
+  color: #999;
+  text-decoration: line-through;
+`;
+
+const DiscountBadge = styled.span`
   font-size: 12px;
-  color: ${({ theme }) => theme.text_secondary + 80};
-  background: ${({ theme }) => theme.bg_secondary + 50};
-  padding: 2px 8px;
-  border-radius: 12px;
-`;
-
-const Title = styled.div`
-  font-size: 16px;
   font-weight: 700;
-  color: ${({ theme }) => theme.text_primary};
+  color: #27ae60;
 `;
 
-const Desc = styled.div`
-  font-size: 16px;
-  font-weight: 400;
-  color: ${({ theme }) => theme.text_primary};
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  text-overflow: ellipsis;
-  white-space: normal;
+const ButtonRow = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
 `;
 
-const Price = styled.div`
+const ActionBtn = styled.button`
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 18px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text_primary};
-`;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
 
-const Percent = styled.div`
-  font-size: 12px;
-  font-weight: 500;
-  color: green;
-`;
-
-const Span = styled.div`
-  font-size: 14px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text_secondary + 60};
-  text-decoration: line-through;
-  text-decoration-color: ${({ theme }) => theme.text_secondary + 50};
+  ${({ primary }) =>
+    primary
+      ? `
+    background: #e23744;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(226, 55, 68, 0.25);
+    &:hover { background: #d02e3b; }
+  `
+      : `
+    background: #ffffff;
+    color: #1c1c1c;
+    border: 1.5px solid #dcdfe3;
+    &:hover { border-color: #e23744; color: #e23744; }
+  `}
 `;
 
 const ProductsCard = ({ product }) => {
@@ -178,12 +197,7 @@ const ProductsCard = ({ product }) => {
       setFavoriteLoading(true);
       await addToFavourite({ productId: product?._id });
       setFavorite(true);
-      dispatch(
-        openSnackbar({
-          message: "Added to favorites",
-          severity: "success",
-        })
-      );
+      dispatch(openSnackbar({ message: "Added to favorites ♥", severity: "success" }));
     } catch (err) {
       console.error("Error adding to favorites:", err);
     } finally {
@@ -196,12 +210,7 @@ const ProductsCard = ({ product }) => {
       setFavoriteLoading(true);
       await deleteFromFavourite({ productId: product?._id });
       setFavorite(false);
-      dispatch(
-        openSnackbar({
-          message: "Removed from favorites",
-          severity: "success",
-        })
-      );
+      dispatch(openSnackbar({ message: "Removed from favorites", severity: "info" }));
     } catch (err) {
       console.error("Error removing from favorites:", err);
     } finally {
@@ -214,7 +223,7 @@ const ProductsCard = ({ product }) => {
       setFavoriteLoading(true);
       const res = await getFavourite();
       const isFavorite = res.data?.some(
-        (favorite) => favorite._id === product?._id
+        (fav) => fav._id === product?._id || fav.product?._id === product?._id
       );
       setFavorite(isFavorite);
     } catch (err) {
@@ -224,19 +233,28 @@ const ProductsCard = ({ product }) => {
     }
   };
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (e) => {
+    e.stopPropagation();
     try {
       setCartLoading(true);
       await addToCart({ productId: product?._id, quantity: 1 });
-      dispatch(
-        openSnackbar({
-          message: "Added to cart",
-          severity: "success",
-        })
-      );
+      dispatch(openSnackbar({ message: "Item added to cart 🎉", severity: "success" }));
+    } catch (err) {
+      dispatch(openSnackbar({ message: "Failed to add to cart", severity: "error" }));
+    } finally {
+      setCartLoading(false);
+    }
+  };
+
+  const handleOrderNow = async (e) => {
+    e.stopPropagation();
+    try {
+      setCartLoading(true);
+      await addToCart({ productId: product?._id, quantity: 1 });
+      dispatch(openSnackbar({ message: "Item added to cart 🎉", severity: "success" }));
       navigate("/cart");
     } catch (err) {
-      console.error("Error adding to cart:", err);
+      dispatch(openSnackbar({ message: "Failed to add to cart", severity: "error" }));
     } finally {
       setCartLoading(false);
     }
@@ -248,58 +266,56 @@ const ProductsCard = ({ product }) => {
 
   useEffect(() => {
     const token = localStorage.getItem("foodeli-app-token") || localStorage.getItem("krist-app-token");
-    if (token) {
+    if (token && product?._id) {
       checkFavorite();
     }
   }, [product]);
 
   return (
-    <Card>
+    <Card onClick={handleImageClick}>
       <Top>
         <Image
           src={product?.img || product?.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500"}
-          onClick={handleImageClick}
           alt={product?.name}
           onError={(e) => {
             e.target.onerror = null;
             e.target.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500";
           }}
         />
-        <Menu>
-          <MenuItem onClick={() => (favorite ? removeFavourite() : addFavourite())}>
-            {favoriteLoading ? (
-              <CircularProgress size={20} />
-            ) : favorite ? (
-              <FavoriteRounded sx={{ fontSize: "20px", color: "red" }} />
-            ) : (
-              <FavoriteBorder sx={{ fontSize: "20px" }} />
-            )}
-          </MenuItem>
-          <MenuItem onClick={handleAddToCart}>
-            {cartLoading ? (
-              <CircularProgress size={20} />
-            ) : (
-              <ShoppingBagOutlined sx={{ fontSize: "20px" }} />
-            )}
-          </MenuItem>
-        </Menu>
-        <Rate>
-          <Rating value={product?.rating || 0} sx={{ fontSize: "14px" }} readOnly />
-        </Rate>
+
+        <FavoriteBtn onClick={(e) => { e.stopPropagation(); favorite ? removeFavourite() : addFavourite(); }}>
+          {favoriteLoading ? (
+            <CircularProgress size={18} style={{ color: "#e23744" }} />
+          ) : favorite ? (
+            <FavoriteRounded style={{ fontSize: "20px", color: "#e23744" }} />
+          ) : (
+            <FavoriteBorder style={{ fontSize: "20px", color: "#666" }} />
+          )}
+        </FavoriteBtn>
+
+        <RateBadge>
+          <Rating value={product?.rating || 4.2} precision={0.1} size="small" readOnly />
+          <span>{product?.rating || 4.2}</span>
+        </RateBadge>
       </Top>
+
       <Details>
         <Title>{product?.name}</Title>
         <Desc>{product?.desc}</Desc>
-        <Price>
-          ₹{product?.price?.org} <Span>₹{product?.price?.mrp}</Span>
-          <Percent>({product?.price?.off}% Off)</Percent>
-        </Price>
-        <RestaurantInfo>
-          <RestaurantName>{product?.restaurant?.name || 'Restaurant'}</RestaurantName>
-          {product?.restaurant?.cuisine?.[0] && (
-            <Cuisine>{product.restaurant.cuisine[0]}</Cuisine>
-          )}
-        </RestaurantInfo>
+        <PriceRow>
+          <OrgPrice>₹{product?.price?.org || 199}</OrgPrice>
+          {product?.price?.mrp && <MrpPrice>₹{product.price.mrp}</MrpPrice>}
+          {product?.price?.off && <DiscountBadge>({product.price.off}% OFF)</DiscountBadge>}
+        </PriceRow>
+
+        <ButtonRow>
+          <ActionBtn onClick={handleAddToCart} disabled={cartLoading}>
+            <ShoppingCartOutlined style={{ fontSize: 16 }} /> Add
+          </ActionBtn>
+          <ActionBtn primary onClick={handleOrderNow} disabled={cartLoading}>
+            <FlashOn style={{ fontSize: 16 }} /> Order Now
+          </ActionBtn>
+        </ButtonRow>
       </Details>
     </Card>
   );

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { Link as LinkR, NavLink, useNavigate } from "react-router-dom";
-import LogoImg from "../utils/Images/Logo.png";
+import { NavLink, useNavigate } from "react-router-dom";
+import BrandLogo from "./BrandLogo";
 import {
   FavoriteBorder,
   MenuRounded,
@@ -102,21 +102,6 @@ const NavContainer = styled.div`
   justify-content: space-between;
   font-size: 1rem;
   position: relative;
-`;
-
-const NavLogo = styled(LinkR)`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  padding: 0 6px;
-  font-weight: 500;
-  font-size: 18px;
-  text-decoration: none;
-  color: inherit;
-`;
-
-const Logo = styled.img`
-  height: 34px;
 `;
 
 const NavItems = styled.ul`
@@ -257,9 +242,7 @@ const Navbar = ({ setOpenAuth, openAuth, currentUser }) => {
         <MobileIcon onClick={() => setIsOpen(!isOpen)}>
           <MenuRounded style={{ color: "inherit" }} />
         </MobileIcon>
-        <NavLogo to="/">
-          <Logo src={LogoImg} alt="Foodeli" />
-        </NavLogo>
+        <BrandLogo />
 
         <MobileIcons>
           <div onClick={() => setShowSearch(!showSearch)}>

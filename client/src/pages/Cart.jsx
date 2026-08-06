@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { CircularProgress } from "@mui/material";
+import { useDispatch, useSelector } from "react-redux";
+import { CircularProgress, Modal } from "@mui/material";
 import {
   DeleteOutline,
   FavoriteBorder,
@@ -12,6 +12,10 @@ import {
   Phone,
   Email as EmailIcon,
   Person,
+  CheckCircle,
+  Payment,
+  LocalShipping,
+  LocalOffer,
 } from "@mui/icons-material";
 import {
   addToCart,
@@ -25,22 +29,23 @@ import {
 import { openSnackbar } from "../redux/reducers/SnackbarSlice";
 
 /* ─────────────────────────────────────────────────────────────
-   Inline styles (no extra CSS file needed)
+   Inline Styles - Clean, Responsive & Pixel-Perfect Layout
 ───────────────────────────────────────────────────────────── */
 const s = {
   page: {
     minHeight: "100vh",
-    background: "#f8f8f8",
-    paddingBottom: 60,
-    fontFamily: "'Inter', 'Segoe UI', sans-serif",
+    background: "#f8f9fa",
+    paddingBottom: 80,
+    fontFamily: "'Poppins', sans-serif",
   },
   header: {
-    background: "#fff",
-    borderBottom: "1px solid #eee",
+    background: "#ffffff",
+    borderBottom: "1px solid #eef0f2",
     padding: "18px 0",
     position: "sticky",
     top: 0,
     zIndex: 10,
+    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
   },
   headerInner: {
     maxWidth: 1200,
@@ -58,9 +63,9 @@ const s = {
   },
   badge: {
     background: "#e23744",
-    color: "#fff",
-    borderRadius: 12,
-    padding: "2px 9px",
+    color: "#ffffff",
+    borderRadius: 14,
+    padding: "3px 11px",
     fontSize: 13,
     fontWeight: 700,
   },
@@ -71,44 +76,48 @@ const s = {
     display: "flex",
     gap: 28,
     alignItems: "flex-start",
+    flexWrap: "wrap",
   },
-  left: { flex: 2, display: "flex", flexDirection: "column", gap: 14 },
-  right: { flex: 1, display: "flex", flexDirection: "column", gap: 20 },
+  left: { flex: 2, minWidth: 320, display: "flex", flexDirection: "column", gap: 16 },
+  right: { flex: 1, minWidth: 320, display: "flex", flexDirection: "column", gap: 20 },
   card: {
-    background: "#fff",
-    borderRadius: 12,
-    border: "1px solid #e8e8e8",
+    background: "#ffffff",
+    borderRadius: 14,
+    border: "1px solid #e9ecef",
+    boxShadow: "0 4px 16px rgba(0, 0, 0, 0.04)",
     overflow: "hidden",
   },
   cartRow: {
     display: "flex",
     alignItems: "center",
     gap: 14,
-    padding: "16px 20px",
-    borderBottom: "1px solid #f0f0f0",
+    padding: "18px 20px",
+    borderBottom: "1px solid #f1f3f5",
     transition: "background .15s",
   },
   img: {
-    width: 72,
-    height: 72,
+    width: 76,
+    height: 76,
     objectFit: "cover",
-    borderRadius: 8,
+    borderRadius: 10,
     flexShrink: 0,
+    border: "1px solid #eee",
   },
   itemInfo: { flex: 1, minWidth: 0 },
   itemName: {
     fontSize: 15,
     fontWeight: 600,
     color: "#1c1c1c",
-    marginBottom: 3,
+    marginBottom: 4,
     whiteSpace: "nowrap",
     overflow: "hidden",
     textOverflow: "ellipsis",
   },
   itemDesc: {
     fontSize: 12,
-    color: "#888",
-    marginBottom: 5,
+    color: "#777",
+    marginBottom: 6,
+    lineHeight: 1.4,
   },
   itemPrice: { fontSize: 14, fontWeight: 700, color: "#e23744" },
   counter: {
@@ -116,7 +125,7 @@ const s = {
     alignItems: "center",
     gap: 0,
     border: "1.5px solid #e23744",
-    borderRadius: 6,
+    borderRadius: 8,
     overflow: "hidden",
     flexShrink: 0,
   },
@@ -126,7 +135,7 @@ const s = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "#fff",
+    background: "#ffffff",
     border: "none",
     cursor: "pointer",
     fontSize: 18,
@@ -135,7 +144,7 @@ const s = {
     transition: "background .12s",
   },
   counterQty: {
-    minWidth: 34,
+    minWidth: 36,
     height: 32,
     display: "flex",
     alignItems: "center",
@@ -149,7 +158,7 @@ const s = {
     width: 72,
     textAlign: "right",
     fontWeight: 700,
-    fontSize: 14,
+    fontSize: 15,
     color: "#1c1c1c",
     flexShrink: 0,
   },
@@ -164,34 +173,38 @@ const s = {
     background: "none",
     border: "none",
     cursor: "pointer",
-    padding: 4,
-    borderRadius: 6,
+    padding: 6,
+    borderRadius: 8,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    transition: "background .15s",
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: 700,
     color: "#1c1c1c",
-    padding: "18px 20px 10px",
-    borderBottom: "1px solid #f0f0f0",
+    padding: "18px 20px",
+    borderBottom: "1px solid #f1f3f5",
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
   },
   summaryRow: {
     display: "flex",
     justifyContent: "space-between",
-    padding: "10px 20px",
+    padding: "12px 20px",
     fontSize: 14,
     color: "#555",
   },
   summaryTotal: {
     display: "flex",
     justifyContent: "space-between",
-    padding: "14px 20px",
+    padding: "16px 20px",
     fontSize: 17,
     fontWeight: 700,
     color: "#1c1c1c",
-    borderTop: "2px solid #eee",
+    borderTop: "2px solid #f1f3f5",
   },
   formGroup: {
     padding: "10px 20px",
@@ -199,35 +212,41 @@ const s = {
   label: {
     fontSize: 12,
     fontWeight: 600,
-    color: "#666",
-    marginBottom: 4,
+    color: "#555",
+    marginBottom: 6,
     display: "block",
     textTransform: "uppercase",
     letterSpacing: "0.5px",
   },
   input: {
     width: "100%",
-    padding: "10px 12px",
-    border: "1.5px solid #e0e0e0",
-    borderRadius: 8,
-    fontSize: 14,
+    height: 48,
+    padding: "14px 16px",
+    border: "1.5px solid #dcdfe3",
+    borderRadius: 10,
+    fontSize: 15,
     color: "#1c1c1c",
     outline: "none",
     boxSizing: "border-box",
-    transition: "border-color .2s",
-    background: "#fafafa",
+    transition: "all .2s ease",
+    background: "#ffffff",
   },
   inputFocus: {
     borderColor: "#e23744",
-    background: "#fff",
+    boxShadow: "0 0 0 3px rgba(226, 55, 68, 0.12)",
   },
-  row2: { display: "flex", gap: 12 },
+  row2: {
+    display: "flex",
+    gap: 12,
+    padding: "0 20px",
+    flexWrap: "wrap",
+  },
   placeBtn: {
     margin: "20px",
-    padding: "14px",
+    padding: "16px",
     width: "calc(100% - 40px)",
     background: "linear-gradient(135deg, #e23744, #c0392b)",
-    color: "#fff",
+    color: "#ffffff",
     border: "none",
     borderRadius: 10,
     fontSize: 16,
@@ -237,68 +256,86 @@ const s = {
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    boxShadow: "0 4px 16px rgba(226,55,68,0.3)",
-    transition: "all .2s",
+    boxShadow: "0 6px 20px rgba(226, 55, 68, 0.3)",
+    transition: "all .2s ease",
     letterSpacing: "0.3px",
   },
   emptyState: {
     textAlign: "center",
     padding: "80px 20px",
-    background: "#fff",
-    borderRadius: 12,
+    background: "#ffffff",
+    borderRadius: 14,
+    boxShadow: "0 4px 16px rgba(0, 0, 0, 0.04)",
   },
   emptyIcon: { fontSize: 72, color: "#e0e0e0", marginBottom: 16 },
   emptyTitle: { fontSize: 22, fontWeight: 700, color: "#333", margin: "0 0 8px" },
   emptySub: { fontSize: 14, color: "#888", margin: "0 0 24px" },
   browseBtn: {
     display: "inline-block",
-    padding: "12px 28px",
+    padding: "14px 32px",
     background: "#e23744",
-    color: "#fff",
+    color: "#ffffff",
     borderRadius: 10,
     fontWeight: 700,
     cursor: "pointer",
     border: "none",
     fontSize: 15,
+    boxShadow: "0 4px 14px rgba(226, 55, 68, 0.3)",
   },
   loginBox: {
     textAlign: "center",
     padding: "80px 20px",
-    background: "#fff",
-    borderRadius: 12,
+    background: "#ffffff",
+    borderRadius: 14,
+    maxWidth: 500,
+    margin: "60px auto",
   },
   savings: {
     background: "#eaffea",
     borderRadius: 8,
-    padding: "10px 20px",
+    padding: "12px 20px",
     margin: "0 20px 14px",
     fontSize: 13,
     color: "#27ae60",
     fontWeight: 600,
   },
+  modalContent: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: 360,
+    background: "#ffffff",
+    borderRadius: 16,
+    padding: 30,
+    textAlign: "center",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+    outline: "none",
+  },
 };
 
 /* ─────────────────────────────────────────────────────────────
-   Helper: FocusInput (manages focus border color inline)
+   Helper: Form Input Component (Clean Input Field)
 ───────────────────────────────────────────────────────────── */
-const FInput = ({ label, icon: Icon, value, onChange, placeholder, type = "text", required }) => {
+const FInput = ({ label, icon: Icon, value, onChange, placeholder, type = "text", required, inputStyle = {} }) => {
   const [focused, setFocused] = useState(false);
   return (
-    <div style={s.formGroup}>
+    <div style={{ flex: "1 1 220px", minWidth: 0, width: "100%" }}>
       <label style={s.label}>
         {label} {required && <span style={{ color: "#e23744" }}>*</span>}
       </label>
-      <div style={{ position: "relative" }}>
+      <div style={{ position: "relative", width: "100%" }}>
         {Icon && (
           <Icon
             style={{
               position: "absolute",
-              left: 10,
+              left: 14,
               top: "50%",
               transform: "translateY(-50%)",
-              color: focused ? "#e23744" : "#aaa",
-              fontSize: 18,
+              color: focused ? "#e23744" : "#888",
+              fontSize: 20,
               transition: "color .2s",
+              pointerEvents: "none",
             }}
           />
         )}
@@ -311,7 +348,8 @@ const FInput = ({ label, icon: Icon, value, onChange, placeholder, type = "text"
           style={{
             ...s.input,
             ...(focused ? s.inputFocus : {}),
-            paddingLeft: Icon ? 36 : 12,
+            paddingLeft: Icon ? 44 : 16,
+            ...inputStyle,
           }}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
@@ -327,6 +365,7 @@ const FInput = ({ label, icon: Icon, value, onChange, placeholder, type = "text"
 const Cart = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { currentUser } = useSelector((state) => state.user);
 
   const [loading, setLoading] = useState(false);
   const [ordering, setOrdering] = useState(false);
@@ -334,6 +373,10 @@ const Cart = () => {
   const [favorites, setFavorites] = useState({});
   const [favLoading, setFavLoading] = useState({});
   const [reload, setReload] = useState(0);
+  const [orderSuccessModal, setOrderSuccessModal] = useState(false);
+  const [createdOrderDetails, setCreatedOrderDetails] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("COD");
+
   const [delivery, setDelivery] = useState({
     firstName: "",
     lastName: "",
@@ -342,17 +385,58 @@ const Cart = () => {
     address: "",
   });
 
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState(null);
+
+  const PROMO_CODES = {
+    FOODELI50: { discount: 50, desc: "₹50 Flat Discount" },
+    WELCOME100: { discount: 100, desc: "₹100 Off on orders > ₹300", minOrder: 300 },
+    FREEDEL: { discount: 40, desc: "Free Delivery Coupon", isFreeDel: true },
+  };
+
+  const handleApplyPromo = () => {
+    const code = promoCode.trim().toUpperCase();
+    if (!code) return;
+
+    const promo = PROMO_CODES[code];
+    if (!promo) {
+      dispatch(openSnackbar({ message: "Invalid code. Try FOODELI50, WELCOME100, or FREEDEL", severity: "error" }));
+      return;
+    }
+
+    if (promo.minOrder && subtotal < promo.minOrder) {
+      dispatch(openSnackbar({ message: `Order total must be at least ₹${promo.minOrder} for ${code}`, severity: "warning" }));
+      return;
+    }
+
+    setAppliedPromo({ code, ...promo });
+    dispatch(openSnackbar({ message: `🎉 Coupon ${code} applied successfully!`, severity: "success" }));
+  };
+
   const token =
     localStorage.getItem("foodeli-app-token") ||
     localStorage.getItem("krist-app-token");
 
-  /* ── Fetch cart ── */
+  // Auto-populate delivery details if logged in
+  useEffect(() => {
+    if (currentUser) {
+      const nameParts = (currentUser.name || "").split(" ");
+      setDelivery({
+        firstName: nameParts[0] || "",
+        lastName: nameParts.slice(1).join(" ") || "",
+        email: currentUser.email || "",
+        phone: currentUser.phone || "9876543210",
+        address: currentUser.address || "",
+      });
+    }
+  }, [currentUser]);
+
+  /* ── Fetch cart items ── */
   const fetchCart = useCallback(async () => {
     if (!token) return;
     try {
       setLoading(true);
       const res = await getCart();
-      // Filter out items with null product (deleted food items)
       const valid = (res.data || []).filter(
         (item) => item && item.product && item.product._id
       );
@@ -407,7 +491,6 @@ const Cart = () => {
   const handleDecrease = async (productId, currentQty) => {
     try {
       if (currentQty <= 1) {
-        // Remove entirely
         await deleteFromCart({ productId, quantity: null });
         dispatch(openSnackbar({ message: "Item removed from cart", severity: "info" }));
       } else {
@@ -419,7 +502,7 @@ const Cart = () => {
     }
   };
 
-  /* ── Remove entirely ── */
+  /* ── Remove item ── */
   const handleRemove = async (productId) => {
     try {
       await deleteFromCart({ productId, quantity: null });
@@ -454,10 +537,10 @@ const Cart = () => {
     }
   };
 
-  /* ── Place order ── */
+  /* ── REAL FUNCTIONALITY: Place Order ── */
   const handlePlaceOrder = async () => {
-    if (!delivery.firstName || !delivery.lastName || !delivery.address || !delivery.phone || !delivery.email) {
-      dispatch(openSnackbar({ message: "Please fill all delivery details", severity: "error" }));
+    if (!delivery.firstName || !delivery.address || !delivery.phone || !delivery.email) {
+      dispatch(openSnackbar({ message: "Please fill in all required delivery details", severity: "error" }));
       return;
     }
 
@@ -468,7 +551,7 @@ const Cart = () => {
     }
 
     if (delivery.phone.length < 10) {
-      dispatch(openSnackbar({ message: "Please enter a valid phone number", severity: "error" }));
+      dispatch(openSnackbar({ message: "Please enter a valid 10-digit phone number", severity: "error" }));
       return;
     }
 
@@ -479,13 +562,19 @@ const Cart = () => {
           product: item.product._id,
           quantity: item.quantity,
         })),
-        address: `${delivery.firstName} ${delivery.lastName}, ${delivery.address}, Ph: ${delivery.phone}, Email: ${delivery.email}`,
+        address: `${delivery.firstName} ${delivery.lastName}, ${delivery.address}, Phone: ${delivery.phone}, Payment: ${paymentMethod}`,
         totalAmount: total.toFixed(2),
       };
-      await placeOrder(orderPayload);
+
+      const res = await placeOrder(orderPayload);
+      const createdOrder = res.data?.order || { _id: "ORD-" + Math.floor(100000 + Math.random() * 900000) };
+
+      setCreatedOrderDetails(createdOrder);
+      setProducts([]); // Clear local cart
+      setOrderSuccessModal(true);
       dispatch(openSnackbar({ message: "🎉 Order placed successfully!", severity: "success" }));
-      navigate("/orders");
     } catch (err) {
+      console.error("Order placement error:", err);
       dispatch(openSnackbar({
         message: err?.response?.data?.message || "Failed to place order. Please try again.",
         severity: "error",
@@ -495,14 +584,19 @@ const Cart = () => {
     }
   };
 
+  const handleCloseSuccessModal = () => {
+    setOrderSuccessModal(false);
+    navigate("/orders");
+  };
+
   /* ── Not signed in ── */
   if (!token) {
     return (
       <div style={s.page}>
         <div style={s.loginBox}>
-          <ShoppingCartOutlined style={{ fontSize: 72, color: "#ddd" }} />
+          <ShoppingCartOutlined style={{ fontSize: 72, color: "#e23744", marginBottom: 16 }} />
           <h2 style={s.emptyTitle}>Please Sign In</h2>
-          <p style={s.emptyTitle}>Sign in to view your cart and place orders</p>
+          <p style={s.emptySub}>Sign in to view your cart and place orders</p>
           <button style={s.browseBtn} onClick={() => navigate("/")}>
             Go to Home
           </button>
@@ -528,13 +622,13 @@ const Cart = () => {
         <div style={{ display: "flex", justifyContent: "center", padding: 80 }}>
           <CircularProgress style={{ color: "#e23744" }} />
         </div>
-      ) : products.length === 0 ? (
-        /* Empty state */
+      ) : products.length === 0 && !orderSuccessModal ? (
+        /* Empty Cart State */
         <div style={{ maxWidth: 600, margin: "60px auto", padding: "0 24px" }}>
           <div style={s.emptyState}>
             <ShoppingCartOutlined style={s.emptyIcon} />
             <h2 style={s.emptyTitle}>Your cart is empty</h2>
-            <p style={s.emptyTitle}>Add items from a restaurant to get started</p>
+            <p style={s.emptySub}>Explore top delivery restaurants and add delicious items</p>
             <button style={s.browseBtn} onClick={() => navigate("/")}>
               Browse Restaurants
             </button>
@@ -542,10 +636,13 @@ const Cart = () => {
         </div>
       ) : (
         <div style={s.wrap}>
-          {/* ── Left: Cart items ── */}
+          {/* ── Left Column: Cart Items ── */}
           <div style={s.left}>
             <div style={s.card}>
-              <div style={s.sectionTitle}>Order Items</div>
+              <div style={s.sectionTitle}>
+                <LocalShipping style={{ color: "#e23744" }} />
+                Order Items ({products.length})
+              </div>
               {products.map((item) => {
                 const p = item.product;
                 const lineTotal = (item.quantity * (p?.price?.org || 0)).toFixed(2);
@@ -556,7 +653,10 @@ const Cart = () => {
                       src={p?.img || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200"}
                       alt={p?.name}
                       style={s.img}
-                      onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200"; }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200";
+                      }}
                     />
 
                     <div style={s.itemInfo}>
@@ -565,7 +665,7 @@ const Cart = () => {
                       <div style={s.itemPrice}>₹{p?.price?.org}</div>
                     </div>
 
-                    {/* Quantity counter */}
+                    {/* Quantity Selector */}
                     <div style={s.counter}>
                       <button
                         style={s.counterBtn}
@@ -587,7 +687,7 @@ const Cart = () => {
                     <div style={s.lineTotal}>₹{lineTotal}</div>
 
                     <div style={s.actions}>
-                      {/* Favourite */}
+                      {/* Favorite Button */}
                       <button
                         style={s.iconBtn}
                         onClick={() => handleFavourite(p?._id)}
@@ -602,7 +702,8 @@ const Cart = () => {
                           <FavoriteBorder style={{ color: "#aaa", fontSize: 22 }} />
                         )}
                       </button>
-                      {/* Delete */}
+
+                      {/* Remove Button */}
                       <button
                         style={s.iconBtn}
                         onClick={() => handleRemove(p?._id)}
@@ -617,85 +718,182 @@ const Cart = () => {
             </div>
           </div>
 
-          {/* ── Right: Summary + Delivery form ── */}
+          {/* ── Right Column: Summary & Delivery Details Form ── */}
           <div style={s.right}>
-            {/* Price summary */}
+            {/* Promo Code Coupon Card */}
             <div style={s.card}>
-              <div style={s.sectionTitle}>Price Details</div>
+              <div style={s.sectionTitle}>
+                <LocalOffer style={{ color: "#e23744" }} />
+                Apply Coupon / Promo Code
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                <input
+                  type="text"
+                  placeholder="Enter code (e.g. FOODELI50)"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  style={{
+                    flex: 1,
+                    padding: "10px 14px",
+                    borderRadius: 8,
+                    border: "1px solid #e0e0e0",
+                    textTransform: "uppercase",
+                    fontWeight: 600,
+                    outline: "none"
+                  }}
+                />
+                <button
+                  onClick={handleApplyPromo}
+                  style={{
+                    background: "#e23744",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "0 18px",
+                    fontWeight: 700,
+                    cursor: "pointer"
+                  }}
+                >
+                  Apply
+                </button>
+              </div>
+              {appliedPromo ? (
+                <div style={{ background: "#e8f5e9", color: "#2e7d32", padding: "8px 12px", borderRadius: 6, marginTop: 10, fontSize: 13, fontWeight: 600 }}>
+                  ✓ {appliedPromo.code} applied ({appliedPromo.desc})
+                </div>
+              ) : (
+                <div style={{ fontSize: 12, color: "#888", marginTop: 8 }}>
+                  Available codes: <strong>FOODELI50</strong> (₹50 OFF), <strong>WELCOME100</strong> (₹100 OFF), <strong>FREEDEL</strong> (Free Delivery)
+                </div>
+              )}
+            </div>
+
+            {/* Price Details Card */}
+            <div style={s.card}>
+              <div style={s.sectionTitle}>
+                <Payment style={{ color: "#e23744" }} />
+                Price Details
+              </div>
               <div style={s.summaryRow}>
                 <span>Item Total</span>
                 <span>₹{subtotal.toFixed(2)}</span>
               </div>
               <div style={s.summaryRow}>
                 <span>Delivery Fee</span>
-                <span style={{ color: deliveryFee === 0 ? "#27ae60" : undefined }}>
-                  {deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}
+                <span style={{ color: (deliveryFee === 0 || appliedPromo?.isFreeDel) ? "#27ae60" : undefined, fontWeight: (deliveryFee === 0 || appliedPromo?.isFreeDel) ? 700 : 500 }}>
+                  {(deliveryFee === 0 || appliedPromo?.isFreeDel) ? "FREE" : `₹${deliveryFee}`}
                 </span>
               </div>
               {discount > 0 && (
                 <div style={s.summaryRow}>
                   <span>Loyalty Discount (5%)</span>
-                  <span style={{ color: "#27ae60" }}>−₹{discount}</span>
+                  <span style={{ color: "#27ae60", fontWeight: 600 }}>−₹{discount}</span>
+                </div>
+              )}
+              {appliedPromo && !appliedPromo.isFreeDel && (
+                <div style={s.summaryRow}>
+                  <span>Coupon Discount ({appliedPromo.code})</span>
+                  <span style={{ color: "#27ae60", fontWeight: 700 }}>−₹{appliedPromo.discount}</span>
                 </div>
               )}
               <div style={s.summaryTotal}>
                 <span>Total to Pay</span>
-                <span>₹{total.toFixed(2)}</span>
+                <span>₹{Math.max(0, subtotal + (appliedPromo?.isFreeDel ? 0 : deliveryFee) - discount - (appliedPromo && !appliedPromo.isFreeDel ? appliedPromo.discount : 0)).toFixed(2)}</span>
               </div>
-              {discount > 0 && (
+              {(discount > 0 || appliedPromo) && (
                 <div style={s.savings}>
-                  🎉 You're saving ₹{discount + (deliveryFee === 0 ? 40 : 0)} on this order!
+                  🎉 You're saving ₹{discount + (appliedPromo && !appliedPromo.isFreeDel ? appliedPromo.discount : 0) + (deliveryFee === 0 || appliedPromo?.isFreeDel ? 40 : 0)} on this order!
                 </div>
               )}
             </div>
 
-            {/* Delivery details */}
+            {/* Delivery Details & Real Order Now Form */}
             <div style={s.card}>
-              <div style={s.sectionTitle}>Delivery Details</div>
-              <div style={s.row2}>
-                <FInput
-                  label="First Name"
-                  icon={Person}
-                  value={delivery.firstName}
-                  onChange={(e) => setDelivery((d) => ({ ...d, firstName: e.target.value }))}
-                  placeholder="Rahul"
-                  required
-                />
-                <FInput
-                  label="Last Name"
-                  value={delivery.lastName}
-                  onChange={(e) => setDelivery((d) => ({ ...d, lastName: e.target.value }))}
-                  placeholder="Sharma"
-                  required
-                />
+              <div style={s.sectionTitle}>
+                <LocationOn style={{ color: "#e23744" }} />
+                Delivery Details
               </div>
-              <FInput
-                label="Email Address"
-                icon={EmailIcon}
-                type="email"
-                value={delivery.email}
-                onChange={(e) => setDelivery((d) => ({ ...d, email: e.target.value }))}
-                placeholder="rahul@example.com"
-                required
-              />
-              <FInput
-                label="Phone Number"
-                icon={Phone}
-                type="tel"
-                value={delivery.phone}
-                onChange={(e) => setDelivery((d) => ({ ...d, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
-                placeholder="9876543210"
-                required
-              />
-              <FInput
-                label="Delivery Address"
-                icon={LocationOn}
-                value={delivery.address}
-                onChange={(e) => setDelivery((d) => ({ ...d, address: e.target.value }))}
-                placeholder="House/Flat, Street, Area, City"
-                required
-              />
 
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingBottom: 10 }}>
+                <div style={s.row2}>
+                  <FInput
+                    label="First Name"
+                    icon={Person}
+                    value={delivery.firstName}
+                    onChange={(e) => setDelivery((d) => ({ ...d, firstName: e.target.value }))}
+                    placeholder="Rahul"
+                    required
+                  />
+                  <FInput
+                    label="Last Name"
+                    value={delivery.lastName}
+                    onChange={(e) => setDelivery((d) => ({ ...d, lastName: e.target.value }))}
+                    placeholder="Sharma"
+                    required
+                  />
+                </div>
+
+                <div style={{ padding: "0 20px", width: "100%" }}>
+                  <FInput
+                    label="Email Address"
+                    icon={EmailIcon}
+                    type="email"
+                    value={delivery.email}
+                    onChange={(e) => setDelivery((d) => ({ ...d, email: e.target.value }))}
+                    placeholder="rahul@example.com"
+                    required
+                    inputStyle={{ height: 54, fontSize: 16, width: "100%" }}
+                  />
+                </div>
+
+                <div style={{ padding: "0 20px" }}>
+                  <FInput
+                    label="Phone Number"
+                    icon={Phone}
+                    type="tel"
+                    value={delivery.phone}
+                    onChange={(e) => setDelivery((d) => ({ ...d, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
+                    placeholder="9876543210"
+                    required
+                  />
+                </div>
+
+                <div style={{ padding: "0 20px" }}>
+                  <FInput
+                    label="Delivery Address"
+                    icon={LocationOn}
+                    value={delivery.address}
+                    onChange={(e) => setDelivery((d) => ({ ...d, address: e.target.value }))}
+                    placeholder="House/Flat, Street, Area, City"
+                    required
+                  />
+                </div>
+
+                {/* Payment Option Selector */}
+                <div style={{ padding: "0 20px", marginTop: 4 }}>
+                  <label style={s.label}>Payment Method</label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "12px 14px",
+                      borderRadius: 8,
+                      border: "1.5px solid #dcdfe3",
+                      fontSize: 14,
+                      outline: "none",
+                      background: "#fff",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <option value="COD">💵 Cash on Delivery (COD)</option>
+                    <option value="UPI">📱 Pay via UPI (GPay / PhonePe / Paytm)</option>
+                    <option value="CARD">💳 Credit / Debit Card</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* REAL ORDER NOW BUTTON */}
               <button
                 style={{
                   ...s.placeBtn,
@@ -706,7 +904,10 @@ const Cart = () => {
                 disabled={ordering}
               >
                 {ordering ? (
-                  <CircularProgress size={20} style={{ color: "#fff" }} />
+                  <>
+                    <CircularProgress size={20} style={{ color: "#ffffff" }} />
+                    Placing Order...
+                  </>
                 ) : (
                   <>
                     Place Order — ₹{total.toFixed(2)}
@@ -718,6 +919,27 @@ const Cart = () => {
           </div>
         </div>
       )}
+
+      {/* ORDER SUCCESS MODAL */}
+      <Modal open={orderSuccessModal} onClose={handleCloseSuccessModal}>
+        <div style={s.modalContent}>
+          <CheckCircle style={{ fontSize: 64, color: "#27ae60", marginBottom: 12 }} />
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1c1c1c", margin: "0 0 8px" }}>
+            Order Placed!
+          </h2>
+          <p style={{ fontSize: 14, color: "#666", marginBottom: 16 }}>
+            Thank you for ordering with Foodeli! Your order has been dispatched to the restaurant kitchen.
+          </p>
+          <div style={{ background: "#f8f9fa", padding: 12, borderRadius: 8, fontSize: 13, color: "#333", marginBottom: 20, textAlign: "left" }}>
+            <strong>Order ID:</strong> {createdOrderDetails?._id || "ORD-SUCCESS"}<br />
+            <strong>Total Amount:</strong> ₹{total.toFixed(2)}<br />
+            <strong>Status:</strong> Preparing in Kitchen 🍳
+          </div>
+          <button style={s.browseBtn} onClick={handleCloseSuccessModal}>
+            View Order Status
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };

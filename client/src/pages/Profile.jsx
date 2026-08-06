@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../redux/reducers/UserSlice";
+import { logout, loginSuccess } from "../redux/reducers/UserSlice";
 import { useNavigate } from "react-router-dom";
 import {
   Person,
@@ -9,16 +9,21 @@ import {
   Favorite,
   LocationOn,
   ExitToApp,
-  CheckCircle
+  CheckCircle,
+  Edit,
+  Save,
+  Email,
+  Phone,
 } from "@mui/icons-material";
-import { Avatar } from "@mui/material";
+import { Avatar, CircularProgress } from "@mui/material";
+import { openSnackbar } from "../redux/reducers/SnackbarSlice";
 import ZomatoHeader from "../components/ZomatoHeader";
 import Footer from "../components/Footer";
 
 const Container = styled.div`
   width: 100%;
   min-height: 100vh;
-  background: #f8f8f8;
+  background: #fafafa;
   display: flex;
   flex-direction: column;
 `;
@@ -42,7 +47,7 @@ const Sidebar = styled.div`
   width: 280px;
   background: #ffffff;
   border-radius: 16px;
-  border: 1px solid #e8e8e8;
+  border: 1px solid #eef0f2;
   padding: 24px 16px;
   display: flex;
   flex-direction: column;
@@ -90,7 +95,7 @@ const NavItem = styled.div`
   gap: 12px;
   padding: 12px 16px;
   border-radius: 10px;
-  background: ${({ active }) => (active ? "#fef2f2" : "transparent")};
+  background: ${({ active }) => (active ? "#fff5f5" : "transparent")};
   color: ${({ active }) => (active ? "#e23744" : "#363636")};
   font-weight: ${({ active }) => (active ? "700" : "500")};
   font-size: 15px;
@@ -98,7 +103,7 @@ const NavItem = styled.div`
   transition: all 0.2s ease;
 
   &:hover {
-    background: #fef2f2;
+    background: #fff5f5;
     color: #e23744;
   }
 `;
@@ -108,12 +113,20 @@ const MainPanel = styled.div`
   flex: 1;
   background: #ffffff;
   border-radius: 16px;
-  border: 1px solid #e8e8e8;
+  border: 1px solid #eef0f2;
   padding: 32px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   gap: 28px;
+`;
+
+const PanelHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
 `;
 
 const PanelTitle = styled.h2`
@@ -126,6 +139,26 @@ const PanelTitle = styled.h2`
   gap: 10px;
 `;
 
+const ToggleEditBtn = styled.button`
+  background: #ffffff;
+  color: #e23744;
+  border: 1.5px solid #e23744;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #e23744;
+    color: #ffffff;
+  }
+`;
+
 const InfoGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -133,41 +166,71 @@ const InfoGrid = styled.div`
 `;
 
 const InfoCard = styled.div`
-  background: #f8f8f8;
+  background: #f8f9fa;
   border-radius: 12px;
   padding: 18px 20px;
   display: flex;
   flex-direction: column;
+  gap: 8px;
+  border: 1px solid #eef0f2;
+`;
+
+const InfoLabel = styled.label`
+  font-size: 12px;
+  color: #666;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
   gap: 6px;
-  border: 1px solid #eeeeee;
 `;
 
-const InfoLabel = styled.span`
-  font-size: 13px;
-  color: #696969;
-  font-weight: 600;
-`;
-
-const InfoValue = styled.span`
+const InfoValue = styled.div`
   font-size: 16px;
   color: #1c1c1c;
   font-weight: 700;
 `;
 
+const StyledInput = styled.input`
+  width: 100%;
+  height: 48px;
+  padding: 12px 14px;
+  border: 1.5px solid #dcdfe3;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1c1c1c;
+  outline: none;
+  background: #ffffff;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+
+  &:focus {
+    border-color: #e23744;
+    box-shadow: 0 0 0 3px rgba(226, 55, 68, 0.12);
+  }
+`;
+
 const ActionBtn = styled.button`
-  background: #e23744;
+  background: linear-gradient(135deg, #e23744, #c0392b);
   color: #ffffff;
   border: none;
   border-radius: 10px;
-  padding: 12px 24px;
+  padding: 14px 28px;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   width: fit-content;
-  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(226, 55, 68, 0.3);
+  transition: all 0.2s ease;
 
   &:hover {
-    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(226, 55, 68, 0.4);
   }
 `;
 
@@ -178,9 +241,66 @@ const Profile = ({ setOpenAuth }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
+
+  // Sync state with currentUser
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        name: currentUser.name || "",
+        email: currentUser.email || "",
+        phone: currentUser.phone || "9876543210",
+        address: currentUser.address || "Civil Lines, Allahabad / Prayagraj",
+      });
+    }
+  }, [currentUser]);
+
   const handleLogout = () => {
     dispatch(logout());
     navigate("/");
+  };
+
+  /* ── Save Profile Changes Functionality ── */
+  const handleSaveProfile = async () => {
+    if (!formData.name.trim()) {
+      dispatch(openSnackbar({ message: "Full Name cannot be empty", severity: "error" }));
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      dispatch(openSnackbar({ message: "Please enter a valid email address", severity: "error" }));
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const updatedUser = {
+        ...currentUser,
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        address: formData.address.trim(),
+      };
+
+      // Update Redux state
+      dispatch(loginSuccess(updatedUser));
+      // Save locally
+      localStorage.setItem("foodeli-user-data", JSON.stringify(updatedUser));
+
+      setIsEditing(false);
+      dispatch(openSnackbar({ message: "🎉 Profile updated successfully!", severity: "success" }));
+    } catch (err) {
+      dispatch(openSnackbar({ message: "Failed to update profile", severity: "error" }));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -198,11 +318,11 @@ const Profile = ({ setOpenAuth }) => {
               src={currentUser?.img}
               sx={{ width: 80, height: 80, fontSize: 32, bgcolor: "#e23744" }}
             >
-              {currentUser?.name?.[0] || "U"}
+              {formData.name?.[0] || currentUser?.name?.[0] || "U"}
             </Avatar>
             <div>
-              <UserName>{currentUser?.name || "Guest User"}</UserName>
-              <UserEmail>{currentUser?.email || "guest@example.com"}</UserEmail>
+              <UserName>{formData.name || currentUser?.name || "Guest User"}</UserName>
+              <UserEmail>{formData.email || currentUser?.email || "guest@example.com"}</UserEmail>
             </div>
           </UserHeader>
 
@@ -233,56 +353,126 @@ const Profile = ({ setOpenAuth }) => {
         <MainPanel>
           {activeTab === "info" && (
             <>
-              <PanelTitle>
-                <Person style={{ color: "#e23744" }} />
-                Account Overview
-              </PanelTitle>
+              <PanelHeader>
+                <PanelTitle>
+                  <Person style={{ color: "#e23744" }} />
+                  Account Details
+                </PanelTitle>
+
+                <ToggleEditBtn onClick={() => setIsEditing(!isEditing)}>
+                  <Edit style={{ fontSize: 16 }} />
+                  {isEditing ? "Cancel Editing" : "Edit Profile"}
+                </ToggleEditBtn>
+              </PanelHeader>
 
               <InfoGrid>
+                {/* Full Name Field */}
                 <InfoCard>
-                  <InfoLabel>Full Name</InfoLabel>
-                  <InfoValue>{currentUser?.name || "User Name"}</InfoValue>
+                  <InfoLabel>
+                    <Person style={{ fontSize: 16 }} /> Full Name *
+                  </InfoLabel>
+                  {isEditing ? (
+                    <StyledInput
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData((fd) => ({ ...fd, name: e.target.value }))}
+                      placeholder="Enter full name"
+                    />
+                  ) : (
+                    <InfoValue>{formData.name || "User Name"}</InfoValue>
+                  )}
                 </InfoCard>
 
+                {/* Email Address Field */}
                 <InfoCard>
-                  <InfoLabel>Email Address</InfoLabel>
-                  <InfoValue>{currentUser?.email || "user@example.com"}</InfoValue>
+                  <InfoLabel>
+                    <Email style={{ fontSize: 16 }} /> Email Address *
+                  </InfoLabel>
+                  {isEditing ? (
+                    <StyledInput
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData((fd) => ({ ...fd, email: e.target.value }))}
+                      placeholder="Enter email address"
+                    />
+                  ) : (
+                    <InfoValue>{formData.email || "user@example.com"}</InfoValue>
+                  )}
                 </InfoCard>
 
+                {/* Phone Number Field */}
+                <InfoCard>
+                  <InfoLabel>
+                    <Phone style={{ fontSize: 16 }} /> Phone Number
+                  </InfoLabel>
+                  {isEditing ? (
+                    <StyledInput
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData((fd) => ({ ...fd, phone: e.target.value }))}
+                      placeholder="Enter 10-digit phone"
+                    />
+                  ) : (
+                    <InfoValue>{formData.phone || "9876543210"}</InfoValue>
+                  )}
+                </InfoCard>
+
+                {/* Account Status */}
                 <InfoCard>
                   <InfoLabel>Account Status</InfoLabel>
                   <InfoValue style={{ color: "#10b981", display: "flex", alignItems: "center", gap: "6px" }}>
                     <CheckCircle style={{ fontSize: "18px" }} /> Verified Member
                   </InfoValue>
                 </InfoCard>
-
-                <InfoCard>
-                  <InfoLabel>Preferred City</InfoLabel>
-                  <InfoValue>{selectedCity}</InfoValue>
-                </InfoCard>
               </InfoGrid>
 
-              <ActionBtn onClick={() => navigate("/orders")}>View My Orders</ActionBtn>
+              {isEditing ? (
+                <ActionBtn onClick={handleSaveProfile} disabled={saving}>
+                  {saving ? <CircularProgress size={18} style={{ color: "#fff" }} /> : <><Save style={{ fontSize: 18 }} /> Save Profile Changes</>}
+                </ActionBtn>
+              ) : (
+                <ActionBtn onClick={() => navigate("/orders")}>View My Orders</ActionBtn>
+              )}
             </>
           )}
 
           {activeTab === "address" && (
             <>
-              <PanelTitle>
-                <LocationOn style={{ color: "#e23744" }} />
-                Delivery Address
-              </PanelTitle>
+              <PanelHeader>
+                <PanelTitle>
+                  <LocationOn style={{ color: "#e23744" }} />
+                  Delivery Address
+                </PanelTitle>
 
-              <InfoCard style={{ background: "#ffffff", border: "1px solid #e8e8e8" }}>
-                <InfoLabel>Default Delivery Location</InfoLabel>
-                <InfoValue style={{ fontSize: "15px", fontWeight: "500", marginTop: "6px" }}>
-                  Civil Lines, Allahabad / Prayagraj, Uttar Pradesh - 211001
-                </InfoValue>
+                <ToggleEditBtn onClick={() => setIsEditing(!isEditing)}>
+                  <Edit style={{ fontSize: 16 }} />
+                  {isEditing ? "Cancel" : "Edit Address"}
+                </ToggleEditBtn>
+              </PanelHeader>
+
+              <InfoCard style={{ background: "#ffffff", border: "1px solid #eef0f2" }}>
+                <InfoLabel>Default Delivery Address</InfoLabel>
+                {isEditing ? (
+                  <StyledInput
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) => setFormData((fd) => ({ ...fd, address: e.target.value }))}
+                    placeholder="House/Flat, Street, Area, City"
+                  />
+                ) : (
+                  <InfoValue style={{ fontSize: "15px", fontWeight: "500", marginTop: "6px" }}>
+                    {formData.address || "Civil Lines, Allahabad / Prayagraj, Uttar Pradesh - 211001"}
+                  </InfoValue>
+                )}
               </InfoCard>
 
-              <ActionBtn onClick={() => alert("Address updated successfully!")}>
-                Save Address
-              </ActionBtn>
+              {isEditing ? (
+                <ActionBtn onClick={handleSaveProfile} disabled={saving}>
+                  {saving ? <CircularProgress size={18} style={{ color: "#fff" }} /> : <><Save style={{ fontSize: 18 }} /> Save Address</>}
+                </ActionBtn>
+              ) : (
+                <ActionBtn onClick={() => setIsEditing(true)}>Edit Saved Address</ActionBtn>
+              )}
             </>
           )}
         </MainPanel>
