@@ -399,41 +399,20 @@ const connectDB = async () => {
     console.log(`⚠️ MongoDB Atlas connection failed: ${err.message}`);
   }
 
-  // Only attempt local or memory DB when NOT running on Vercel
-  if (!process.env.VERCEL && !process.env.VERCEL_ENV) {
-    try {
-      console.log("Attempting Local MongoDB...");
-      await mongoose.connect("mongodb://127.0.0.1:27017/food_delivery", {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 3000,
-      });
-      isConnected = true;
-      console.log("✅ Connected to Local MongoDB");
-      await seedInitialDataIfNeeded();
-      return;
-    } catch (locErr) {
-      console.log(`⚠️ Local MongoDB failed: ${locErr.message}`);
-    }
-
-    console.log("🚀 Starting In-Memory MongoDB Server...");
-    try {
-      const pkg = "mongodb-memory-server";
-      const { MongoMemoryServer } = await import(pkg);
-      const mongoServer = await MongoMemoryServer.create({
-        binary: { version: "4.4.18" }
-      });
-      const memoryUri = mongoServer.getUri();
-      await mongoose.connect(memoryUri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-      isConnected = true;
-      console.log(`✅ Successfully connected to In-Memory MongoDB at ${memoryUri}`);
-      await seedInitialDataIfNeeded();
-    } catch (memErr) {
-      console.error("❌ In-Memory MongoDB Server skipped:", memErr.message);
-    }
+  // Fallback to Local MongoDB if offline locally
+  try {
+    console.log("Attempting Local MongoDB...");
+    await mongoose.connect("mongodb://127.0.0.1:27017/food_delivery", {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 3000,
+    });
+    isConnected = true;
+    console.log("✅ Connected to Local MongoDB");
+    await seedInitialDataIfNeeded();
+    return;
+  } catch (locErr) {
+    console.log(`⚠️ Local MongoDB failed: ${locErr.message}`);
   }
 };
 
