@@ -1,6 +1,7 @@
 {
   "name": "food-delivery-mern",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "build": "cd client && npm install && npm run build",
     "start": "concurrently \"npm start --prefix server\" \"npm start --prefix client\"",
@@ -9,7 +10,14 @@
     "client": "npm start --prefix client"
   },
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "concurrently": "^10.0.4",
-    "mongodb": "^6.21.0"
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.21.0",
+    "mongoose": "^6.13.8"
   }
 }
+
