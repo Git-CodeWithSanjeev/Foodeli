@@ -357,8 +357,6 @@ export const createMenuForRestaurant = async (restaurantId, isPureVeg = false, n
 // Main export: fetchLivePlacesFromAPI
 // Called by the NearbyRestaurants controller
 // ---------------------------------------------------------------
-const serverPlaceCache = new Map();
-
 export const fetchLivePlacesFromAPI = async (
   cityName = "Allahabad",
   userLat = 25.4358,
@@ -366,11 +364,6 @@ export const fetchLivePlacesFromAPI = async (
 ) => {
   try {
     const key = cityName.toLowerCase().trim();
-    if (serverPlaceCache.has(key)) {
-      console.log(`⚡ Instant Server Cache Hit for place query: ${cityName}`);
-      return serverPlaceCache.get(key);
-    }
-
     const coords = CITY_COORDS[key] || { lat: userLat, lng: userLng };
 
     const rawPlaces = await fetchFromGeoapify(coords.lat, coords.lng, cityName);
@@ -379,7 +372,6 @@ export const fetchLivePlacesFromAPI = async (
       console.log("ℹ️  No new live places fetched — using seeded data");
       return [];
     }
-    serverPlaceCache.set(key, rawPlaces);
 
     const savedRestaurants = [];
 

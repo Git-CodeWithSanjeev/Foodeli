@@ -260,14 +260,6 @@ const Orders = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const getEtaText = (createdAt) => {
-    if (!createdAt) return "⚡ Delivery ETA: 25-30 mins";
-    const elapsedMinutes = Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000);
-    const remaining = Math.max(0, 28 - elapsedMinutes);
-    if (remaining === 0) return "Arriving any minute now! 🛵";
-    return `⚡ Estimated Delivery: ${remaining} mins`;
-  };
-
   const fetchUserOrders = async () => {
     setLoading(true);
     setError("");
@@ -350,7 +342,7 @@ const Orders = () => {
                 </div>
                 <StatusBadge>
                   <CheckCircleOutline style={{ fontSize: "15px" }} />
-                  {getEtaText(order.createdAt)}
+                  Preparing in Kitchen
                 </StatusBadge>
               </OrderTop>
 

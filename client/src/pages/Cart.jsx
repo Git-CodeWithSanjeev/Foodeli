@@ -15,7 +15,6 @@ import {
   CheckCircle,
   Payment,
   LocalShipping,
-  LocalOffer,
 } from "@mui/icons-material";
 import {
   addToCart,
@@ -385,34 +384,6 @@ const Cart = () => {
     address: "",
   });
 
-  const [promoCode, setPromoCode] = useState("");
-  const [appliedPromo, setAppliedPromo] = useState(null);
-
-  const PROMO_CODES = {
-    FOODELI50: { discount: 50, desc: "₹50 Flat Discount" },
-    WELCOME100: { discount: 100, desc: "₹100 Off on orders > ₹300", minOrder: 300 },
-    FREEDEL: { discount: 40, desc: "Free Delivery Coupon", isFreeDel: true },
-  };
-
-  const handleApplyPromo = () => {
-    const code = promoCode.trim().toUpperCase();
-    if (!code) return;
-
-    const promo = PROMO_CODES[code];
-    if (!promo) {
-      dispatch(openSnackbar({ message: "Invalid code. Try FOODELI50, WELCOME100, or FREEDEL", severity: "error" }));
-      return;
-    }
-
-    if (promo.minOrder && subtotal < promo.minOrder) {
-      dispatch(openSnackbar({ message: `Order total must be at least ₹${promo.minOrder} for ${code}`, severity: "warning" }));
-      return;
-    }
-
-    setAppliedPromo({ code, ...promo });
-    dispatch(openSnackbar({ message: `🎉 Coupon ${code} applied successfully!`, severity: "success" }));
-  };
-
   const token =
     localStorage.getItem("foodeli-app-token") ||
     localStorage.getItem("krist-app-token");
@@ -720,54 +691,6 @@ const Cart = () => {
 
           {/* ── Right Column: Summary & Delivery Details Form ── */}
           <div style={s.right}>
-            {/* Promo Code Coupon Card */}
-            <div style={s.card}>
-              <div style={s.sectionTitle}>
-                <LocalOffer style={{ color: "#e23744" }} />
-                Apply Coupon / Promo Code
-              </div>
-              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                <input
-                  type="text"
-                  placeholder="Enter code (e.g. FOODELI50)"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  style={{
-                    flex: 1,
-                    padding: "10px 14px",
-                    borderRadius: 8,
-                    border: "1px solid #e0e0e0",
-                    textTransform: "uppercase",
-                    fontWeight: 600,
-                    outline: "none"
-                  }}
-                />
-                <button
-                  onClick={handleApplyPromo}
-                  style={{
-                    background: "#e23744",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: "0 18px",
-                    fontWeight: 700,
-                    cursor: "pointer"
-                  }}
-                >
-                  Apply
-                </button>
-              </div>
-              {appliedPromo ? (
-                <div style={{ background: "#e8f5e9", color: "#2e7d32", padding: "8px 12px", borderRadius: 6, marginTop: 10, fontSize: 13, fontWeight: 600 }}>
-                  ✓ {appliedPromo.code} applied ({appliedPromo.desc})
-                </div>
-              ) : (
-                <div style={{ fontSize: 12, color: "#888", marginTop: 8 }}>
-                  Available codes: <strong>FOODELI50</strong> (₹50 OFF), <strong>WELCOME100</strong> (₹100 OFF), <strong>FREEDEL</strong> (Free Delivery)
-                </div>
-              )}
-            </div>
-
             {/* Price Details Card */}
             <div style={s.card}>
               <div style={s.sectionTitle}>
@@ -780,8 +703,8 @@ const Cart = () => {
               </div>
               <div style={s.summaryRow}>
                 <span>Delivery Fee</span>
-                <span style={{ color: (deliveryFee === 0 || appliedPromo?.isFreeDel) ? "#27ae60" : undefined, fontWeight: (deliveryFee === 0 || appliedPromo?.isFreeDel) ? 700 : 500 }}>
-                  {(deliveryFee === 0 || appliedPromo?.isFreeDel) ? "FREE" : `₹${deliveryFee}`}
+                <span style={{ color: deliveryFee === 0 ? "#27ae60" : undefined, fontWeight: deliveryFee === 0 ? 700 : 500 }}>
+                  {deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}
                 </span>
               </div>
               {discount > 0 && (
@@ -790,19 +713,13 @@ const Cart = () => {
                   <span style={{ color: "#27ae60", fontWeight: 600 }}>−₹{discount}</span>
                 </div>
               )}
-              {appliedPromo && !appliedPromo.isFreeDel && (
-                <div style={s.summaryRow}>
-                  <span>Coupon Discount ({appliedPromo.code})</span>
-                  <span style={{ color: "#27ae60", fontWeight: 700 }}>−₹{appliedPromo.discount}</span>
-                </div>
-              )}
               <div style={s.summaryTotal}>
                 <span>Total to Pay</span>
-                <span>₹{Math.max(0, subtotal + (appliedPromo?.isFreeDel ? 0 : deliveryFee) - discount - (appliedPromo && !appliedPromo.isFreeDel ? appliedPromo.discount : 0)).toFixed(2)}</span>
+                <span>₹{total.toFixed(2)}</span>
               </div>
-              {(discount > 0 || appliedPromo) && (
+              {discount > 0 && (
                 <div style={s.savings}>
-                  🎉 You're saving ₹{discount + (appliedPromo && !appliedPromo.isFreeDel ? appliedPromo.discount : 0) + (deliveryFee === 0 || appliedPromo?.isFreeDel ? 40 : 0)} on this order!
+                  🎉 You're saving ₹{discount + (deliveryFee === 0 ? 40 : 0)} on this order!
                 </div>
               )}
             </div>

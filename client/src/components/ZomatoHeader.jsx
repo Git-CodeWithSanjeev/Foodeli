@@ -14,7 +14,6 @@ import {
 import { Avatar } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../redux/reducers/UserSlice";
-import { openSnackbar } from "../redux/reducers/SnackbarSlice";
 import { getAllProducts, getCart } from "../api";
 import BrandLogo from "./BrandLogo";
 
@@ -282,57 +281,18 @@ const ZomatoHeader = ({ selectedCity, setSelectedCity, setOpenAuth }) => {
     navigate(`/dishes/${dishId}`);
   };
 
-  const handleDetectGPS = async () => {
-    setShowDropdown(false);
-    dispatch(openSnackbar({ message: "Detecting your location...", severity: "info" }));
-
-    const detectByIP = async () => {
-      try {
-        const ipRes = await fetch("https://ipapi.co/json/");
-        const ipData = await ipRes.json();
-        const city = ipData.city || "Allahabad / Prayagraj";
-        setSelectedCity(city);
-        localStorage.setItem("foodeli-user-city", city);
-        dispatch(openSnackbar({ message: `📍 Location detected: ${city}`, severity: "success" }));
-      } catch (err) {
-        const fallbackCity = "Allahabad / Prayagraj";
-        setSelectedCity(fallbackCity);
-        localStorage.setItem("foodeli-user-city", fallbackCity);
-        dispatch(openSnackbar({ message: `📍 Location set to ${fallbackCity}`, severity: "info" }));
-      }
-    };
-
+  const handleDetectGPS = () => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          try {
-            const { latitude, longitude } = pos.coords;
-            const geoRes = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
-            );
-            const geoData = await geoRes.json();
-            const city =
-              geoData.address?.city ||
-              geoData.address?.town ||
-              geoData.address?.suburb ||
-              geoData.address?.state_district ||
-              "Allahabad / Prayagraj";
-
-            setSelectedCity(city);
-            localStorage.setItem("foodeli-user-city", city);
-            dispatch(openSnackbar({ message: `📍 Location detected: ${city}`, severity: "success" }));
-          } catch (_) {
-            await detectByIP();
-          }
+        (pos) => {
+          setSelectedCity(`GPS (${pos.coords.latitude.toFixed(2)}°, ${pos.coords.longitude.toFixed(2)}°)`);
+          setShowDropdown(false);
         },
-        async (err) => {
-          console.warn("GPS error:", err);
-          await detectByIP();
-        },
-        { timeout: 6000, enableHighAccuracy: true }
+        () => {
+          setSelectedCity("Allahabad / Prayagraj");
+          setShowDropdown(false);
+        }
       );
-    } else {
-      await detectByIP();
     }
   };
 
