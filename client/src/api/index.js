@@ -3,7 +3,6 @@ import { openSnackbar } from "../redux/reducers/SnackbarSlice";
 import { store } from "../redux/store";
 
 const getBaseURL = () => {
-  const envUrl = process.env.REACT_APP_API_URL;
   if (typeof window !== "undefined") {
     const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
     if (!isLocalhost) {
@@ -11,7 +10,7 @@ const getBaseURL = () => {
       return "/api/";
     }
   }
-  return envUrl || "http://localhost:5000/api/";
+  return "http://localhost:5000/api/";
 };
 
 const API = axios.create({
