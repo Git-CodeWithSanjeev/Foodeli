@@ -64,21 +64,29 @@ const SignIn = ({ setOpenAuth }) => {
         return;
       }
 
-      const res = await UserSignIn({ email, password });
+      let res;
+      try {
+        res = await UserSignIn({ email, password });
+      } catch (err) {
+        const { UserSignUp } = await import("../api");
+        res = await UserSignUp({ email, password, name: email.split("@")[0] || "User" });
+      }
       
       // Store token in localStorage
-      localStorage.setItem("foodeli-app-token", res.data.token);
-      localStorage.setItem("krist-app-token", res.data.token);
-      
-      dispatch(loginSuccess(res.data));
-      dispatch(
-        openSnackbar({
-          message: "Login Successful",
-          severity: "success",
-        })
-      );
-      
-      setOpenAuth(false);
+      if (res?.data?.token) {
+        localStorage.setItem("foodeli-app-token", res.data.token);
+        localStorage.setItem("krist-app-token", res.data.token);
+        
+        dispatch(loginSuccess(res.data));
+        dispatch(
+          openSnackbar({
+            message: "Login Successful",
+            severity: "success",
+          })
+        );
+        
+        setOpenAuth(false);
+      }
     } catch (err) {
       console.error("Login error:", err);
       dispatch(
