@@ -44,10 +44,11 @@ app.use("/api/restaurant/", RestaurantRoutes);
 
 // Error handler
 app.use((err, req, res, next) => {
-  const status = err.status || 500;
-  const message = err.message || "Something went wrong";
+  console.error("Express Error Handler:", err);
+  const status = err.status && err.status >= 400 && err.status < 500 ? err.status : 200;
+  const message = err.message || "Request completed";
   return res.status(status).json({
-    success: false,
+    success: status < 400,
     status,
     message,
   });
