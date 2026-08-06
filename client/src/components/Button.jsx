@@ -74,7 +74,7 @@ const button = ({
   rightIcon,
   leftIcon,
   type,
-  onClick,
+  onClick = () => {},
   flex,
   small,
   outlined,
@@ -82,7 +82,11 @@ const button = ({
 }) => {
   return (
     <Button
-      onClick={() => !isDisabled && !isLoading && onClick()}
+      onClick={(e) => {
+        if (!isDisabled && !isLoading && typeof onClick === "function") {
+          onClick(e);
+        }
+      }}
       isDisabled={isDisabled}
       type={type}
       isLoading={isLoading}
