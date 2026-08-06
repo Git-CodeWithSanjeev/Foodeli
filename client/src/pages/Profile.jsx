@@ -1,0 +1,298 @@
+import React, { useState } from "react";
+import styled from "styled-components";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../redux/reducers/UserSlice";
+import { useNavigate } from "react-router-dom";
+import {
+  Person,
+  ShoppingBag,
+  Favorite,
+  LocationOn,
+  ExitToApp,
+  Email,
+  Edit,
+  CheckCircle
+} from "@mui/icons-material";
+import { Avatar } from "@mui/material";
+import ZomatoHeader from "../components/ZomatoHeader";
+import Footer from "../components/Footer";
+
+const Container = styled.div`
+  width: 100%;
+  min-height: 100vh;
+  background: #f8f8f8;
+  display: flex;
+  flex-direction: column;
+`;
+
+const Content = styled.main`
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 20px;
+  display: flex;
+  gap: 32px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    padding: 20px 14px;
+  }
+`;
+
+// Sidebar Navigation
+const Sidebar = styled.div`
+  width: 280px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e8e8e8;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  height: fit-content;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+const UserHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+`;
+
+const UserName = styled.h2`
+  font-size: 20px;
+  font-weight: 800;
+  color: #1c1c1c;
+  margin: 0;
+`;
+
+const UserEmail = styled.div`
+  font-size: 13px;
+  color: #696969;
+  font-weight: 500;
+`;
+
+const NavList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const NavItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: ${({ active }) => (active ? "#fef2f2" : "transparent")};
+  color: ${({ active }) => (active ? "#e23744" : "#363636")};
+  font-weight: ${({ active }) => (active ? "700" : "500")};
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #fef2f2;
+    color: #e23744;
+  }
+`;
+
+// Main Panel
+const MainPanel = styled.div`
+  flex: 1;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e8e8e8;
+  padding: 32px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+`;
+
+const PanelTitle = styled.h2`
+  font-size: 24px;
+  font-weight: 800;
+  color: #1c1c1c;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`;
+
+const InfoGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+`;
+
+const InfoCard = styled.div`
+  background: #f8f8f8;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid #eeeeee;
+`;
+
+const InfoLabel = styled.span`
+  font-size: 13px;
+  color: #696969;
+  font-weight: 600;
+`;
+
+const InfoValue = styled.span`
+  font-size: 16px;
+  color: #1c1c1c;
+  font-weight: 700;
+`;
+
+const ActionBtn = styled.button`
+  background: #e23744;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  width: fit-content;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #c82333;
+  }
+`;
+
+const Profile = ({ setOpenAuth }) => {
+  const [activeTab, setActiveTab] = useState("info");
+  const [selectedCity, setSelectedCity] = useState("Allahabad / Prayagraj");
+  const { currentUser } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/");
+  };
+
+  return (
+    <Container>
+      <ZomatoHeader
+        selectedCity={selectedCity}
+        setSelectedCity={setSelectedCity}
+        setOpenAuth={setOpenAuth}
+      />
+
+      <Content>
+        <Sidebar>
+          <UserHeader>
+            <Avatar
+              src={currentUser?.img}
+              sx={{ width: 80, height: 80, fontSize: 32, bgcolor: "#e23744" }}
+            >
+              {currentUser?.name?.[0] || "U"}
+            </Avatar>
+            <div>
+              <UserName>{currentUser?.name || "Guest User"}</UserName>
+              <UserEmail>{currentUser?.email || "guest@example.com"}</UserEmail>
+            </div>
+          </UserHeader>
+
+          <NavList>
+            <NavItem active={activeTab === "info"} onClick={() => setActiveTab("info")}>
+              <Person style={{ fontSize: "20px" }} />
+              Personal Info
+            </NavItem>
+            <NavItem onClick={() => navigate("/orders")}>
+              <ShoppingBag style={{ fontSize: "20px" }} />
+              My Orders
+            </NavItem>
+            <NavItem onClick={() => navigate("/favourites")}>
+              <Favorite style={{ fontSize: "20px" }} />
+              My Favourites
+            </NavItem>
+            <NavItem active={activeTab === "address"} onClick={() => setActiveTab("address")}>
+              <LocationOn style={{ fontSize: "20px" }} />
+              Saved Address
+            </NavItem>
+            <NavItem onClick={handleLogout} style={{ color: "#ef4444" }}>
+              <ExitToApp style={{ fontSize: "20px" }} />
+              Log Out
+            </NavItem>
+          </NavList>
+        </Sidebar>
+
+        <MainPanel>
+          {activeTab === "info" && (
+            <>
+              <PanelTitle>
+                <Person style={{ color: "#e23744" }} />
+                Account Overview
+              </PanelTitle>
+
+              <InfoGrid>
+                <InfoCard>
+                  <InfoLabel>Full Name</InfoLabel>
+                  <InfoValue>{currentUser?.name || "User Name"}</InfoValue>
+                </InfoCard>
+
+                <InfoCard>
+                  <InfoLabel>Email Address</InfoLabel>
+                  <InfoValue>{currentUser?.email || "user@example.com"}</InfoValue>
+                </InfoCard>
+
+                <InfoCard>
+                  <InfoLabel>Account Status</InfoLabel>
+                  <InfoValue style={{ color: "#10b981", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <CheckCircle style={{ fontSize: "18px" }} /> Verified Member
+                  </InfoValue>
+                </InfoCard>
+
+                <InfoCard>
+                  <InfoLabel>Preferred City</InfoLabel>
+                  <InfoValue>{selectedCity}</InfoValue>
+                </InfoCard>
+              </InfoGrid>
+
+              <ActionBtn onClick={() => navigate("/orders")}>View My Orders</ActionBtn>
+            </>
+          )}
+
+          {activeTab === "address" && (
+            <>
+              <PanelTitle>
+                <LocationOn style={{ color: "#e23744" }} />
+                Delivery Address
+              </PanelTitle>
+
+              <InfoCard style={{ background: "#ffffff", border: "1px solid #e8e8e8" }}>
+                <InfoLabel>Default Delivery Location</InfoLabel>
+                <InfoValue style={{ fontSize: "15px", fontWeight: "500", marginTop: "6px" }}>
+                  Civil Lines, Allahabad / Prayagraj, Uttar Pradesh - 211001
+                </InfoValue>
+              </InfoCard>
+
+              <ActionBtn onClick={() => alert("Address updated successfully!")}>
+                Save Address
+              </ActionBtn>
+            </>
+          )}
+        </MainPanel>
+      </Content>
+
+      <Footer />
+    </Container>
+  );
+};
+
+export default Profile;
