@@ -388,8 +388,8 @@ const connectDB = async () => {
     await mongoose.connect(envUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 15000,
     });
     isConnected = true;
     console.log("✅ Successfully connected to MongoDB Atlas");
@@ -399,7 +399,8 @@ const connectDB = async () => {
     console.log(`⚠️ MongoDB Atlas connection failed: ${err.message}`);
   }
 
-  if (!process.env.VERCEL) {
+  // Only attempt local or memory DB when NOT running on Vercel
+  if (!process.env.VERCEL && !process.env.VERCEL_ENV) {
     try {
       console.log("Attempting Local MongoDB...");
       await mongoose.connect("mongodb://127.0.0.1:27017/food_delivery", {
@@ -417,7 +418,8 @@ const connectDB = async () => {
 
     console.log("🚀 Starting In-Memory MongoDB Server...");
     try {
-      const { MongoMemoryServer } = await import("mongodb-memory-server");
+      const pkg = "mongodb-memory-server";
+      const { MongoMemoryServer } = await import(pkg);
       const mongoServer = await MongoMemoryServer.create({
         binary: { version: "4.4.18" }
       });
