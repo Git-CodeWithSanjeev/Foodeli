@@ -2,7 +2,6 @@ import express from "express";
 import * as dotenv from "dotenv";
 import cors from "cors";
 import mongoose from "mongoose";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import UserRoutes from "./routes/User.js";
 import FoodRoutes from "./routes/Food.js";
 import RestaurantRoutes from "./routes/Restaurant.js";
@@ -418,6 +417,7 @@ const connectDB = async () => {
 
     console.log("🚀 Starting In-Memory MongoDB Server...");
     try {
+      const { MongoMemoryServer } = await import("mongodb-memory-server");
       const mongoServer = await MongoMemoryServer.create({
         binary: { version: "4.4.18" }
       });
@@ -430,7 +430,7 @@ const connectDB = async () => {
       console.log(`✅ Successfully connected to In-Memory MongoDB at ${memoryUri}`);
       await seedInitialDataIfNeeded();
     } catch (memErr) {
-      console.error("❌ Failed to start In-Memory MongoDB Server:", memErr.message);
+      console.error("❌ In-Memory MongoDB Server skipped:", memErr.message);
     }
   }
 };
