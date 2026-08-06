@@ -8,6 +8,10 @@
       "DISABLE_ESLINT_PLUGIN": "true"
     }
   },
+  "env": {
+    "MONGODB_URL": "mongodb+srv://Foodeli_Admin:Batman1221@foodeli.k4f3jn8.mongodb.net/?retryWrites=true&w=majority&appName=Foodeli",
+    "JWT": "foodeli_secret_jwt_key_2026"
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
