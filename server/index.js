@@ -20,9 +20,23 @@ dotenv.config({ path: join(__dirname, ".env") });
 
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error("DB connection error:", err);
+    next();
+  }
+});
 
 app.use("/api/user/", UserRoutes);
 app.use("/api/food/", FoodRoutes);
@@ -47,9 +61,11 @@ app.get("/", async (req, res) => {
 
 const seedInitialDataIfNeeded = async () => {
   try {
-    // Clear and re-seed to ensure Zomato schema compatibility with 25+ restaurants
-    await Restaurant.deleteMany({});
-    await Food.deleteMany({});
+    const existingCount = await Restaurant.countDocuments();
+    if (existingCount > 0) {
+      console.log(`ℹ️ Database already initialized with ${existingCount} restaurants.`);
+      return;
+    }
     
     console.log("🌱 Seeding 25+ real Zomato restaurants & food data...");
     
@@ -341,6 +357,8 @@ const seedInitialDataIfNeeded = async () => {
       image: getRealRestaurantImage(r.name, r.cuisine, idx),
     }));
 
+    const createdRestaurants = await Restaurant.insertMany(formattedRestaurants);
+
     // Seed unique, brand & cuisine specific menus for each restaurant
     for (let i = 0; i < createdRestaurants.length; i++) {
       const rest = createdRestaurants[i];
@@ -355,13 +373,17 @@ const seedInitialDataIfNeeded = async () => {
   }
 };
 
+let isConnected = false;
+
 const connectDB = async () => {
+  if (isConnected && mongoose.connection.readyState === 1) {
+    return;
+  }
   mongoose.set("strictQuery", true);
   const targets = [];
   
-  if (process.env.MONGODB_URL) {
-    targets.push({ name: "Configured MONGODB_URL", uri: process.env.MONGODB_URL });
-  }
+  const envUri = process.env.MONGODB_URL || "mongodb+srv://Foodeli_Admin:Batman1221@foodeli.k4f3jn8.mongodb.net/?retryWrites=true&w=majority&appName=Foodeli";
+  targets.push({ name: "Configured MONGODB_URL", uri: envUri });
   targets.push({ name: "Local MongoDB", uri: "mongodb://127.0.0.1:27017/food_delivery" });
 
   for (const target of targets) {
@@ -370,9 +392,10 @@ const connectDB = async () => {
       await mongoose.connect(target.uri, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 15000,
-        connectTimeoutMS: 15000,
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000,
       });
+      isConnected = true;
       console.log(`✅ Successfully connected to ${target.name}`);
       await seedInitialDataIfNeeded();
       return;
@@ -381,21 +404,23 @@ const connectDB = async () => {
     }
   }
 
-  console.log("🚀 Starting In-Memory MongoDB Server...");
-  try {
-    const mongoServer = await MongoMemoryServer.create({
-      binary: { version: "4.4.18" }
-    });
-    const memoryUri = mongoServer.getUri();
-    await mongoose.connect(memoryUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log(`✅ Successfully connected to In-Memory MongoDB at ${memoryUri}`);
-    await seedInitialDataIfNeeded();
-  } catch (memErr) {
-    console.error("❌ Failed to start In-Memory MongoDB Server:", memErr.message);
-    process.exit(1);
+  if (!process.env.VERCEL) {
+    console.log("🚀 Starting In-Memory MongoDB Server...");
+    try {
+      const mongoServer = await MongoMemoryServer.create({
+        binary: { version: "4.4.18" }
+      });
+      const memoryUri = mongoServer.getUri();
+      await mongoose.connect(memoryUri, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      });
+      isConnected = true;
+      console.log(`✅ Successfully connected to In-Memory MongoDB at ${memoryUri}`);
+      await seedInitialDataIfNeeded();
+    } catch (memErr) {
+      console.error("❌ Failed to start In-Memory MongoDB Server:", memErr.message);
+    }
   }
 };
 
@@ -409,6 +434,8 @@ const startServer = async () => {
   }
 };
 
-startServer();
+if (process.env.NODE_ENV !== "test") {
+  startServer();
+}
 
 export default app;
