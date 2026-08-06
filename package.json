@@ -2,7 +2,7 @@
   "name": "food-delivery-mern",
   "version": "1.0.0",
   "scripts": {
-    "build": "npm run build --prefix client",
+    "build": "npm --prefix client install && npm --prefix client run build",
     "start": "concurrently \"npm start --prefix server\" \"npm start --prefix client\"",
     "dev": "concurrently \"npm start --prefix server\" \"npm start --prefix client\"",
     "server": "npm start --prefix server",
