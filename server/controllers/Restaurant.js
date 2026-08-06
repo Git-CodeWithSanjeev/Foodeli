@@ -189,8 +189,25 @@ const FALLBACK_RESTAURANTS = [
   }
 ];
 
-const getFormattedFallbackRestaurants = (userLat, userLng) => {
-  return FALLBACK_RESTAURANTS.map((rest, index) => {
+const getFormattedFallbackRestaurants = (userLat, userLng, isPureVeg = false, minRating = null, search = "") => {
+  let list = FALLBACK_RESTAURANTS;
+  if (isPureVeg) {
+    list = list.filter((r) => r.isPureVeg);
+  }
+  if (minRating) {
+    list = list.filter((r) => r.rating >= parseFloat(minRating));
+  }
+  if (search) {
+    const s = search.toLowerCase();
+    list = list.filter(
+      (r) =>
+        r.name.toLowerCase().includes(s) ||
+        r.cuisine.some((c) => c.toLowerCase().includes(s)) ||
+        (r.address && r.address.toLowerCase().includes(s))
+    );
+  }
+
+  return list.map((rest, index) => {
     const distance = getHaversineDistance(userLat, userLng, rest.location.lat, rest.location.lng);
     const deliveryMins = Math.max(15, Math.min(45, Math.floor(18 + (distance || 1) * 6)));
     const realImg = getRealRestaurantImage(rest.name, rest.cuisine, index);
@@ -249,7 +266,14 @@ export const getNearbyRestaurants = async (req, res, next) => {
     filter.cuisine = { $in: [new RegExp(escapeRegex(cuisine), "i")] };
   }
   if (city) {
-    filter.city = { $regex: new RegExp(escapeRegex(city), "i") };
+    const cityPattern = city
+      .split(/[\/,]/)
+      .map((s) => escapeRegex(s.trim()))
+      .filter(Boolean)
+      .join("|");
+    if (cityPattern) {
+      filter.city = { $regex: new RegExp(cityPattern, "i") };
+    }
   }
   if (isPureVeg === "true") {
     filter.isPureVeg = true;
@@ -296,7 +320,7 @@ export const getNearbyRestaurants = async (req, res, next) => {
       };
     });
   } else {
-    nearbyList = getFormattedFallbackRestaurants(userLat, userLng);
+    nearbyList = getFormattedFallbackRestaurants(userLat, userLng, isPureVeg === "true", minRating, search);
   }
 
   if (fastDelivery === "true") {
