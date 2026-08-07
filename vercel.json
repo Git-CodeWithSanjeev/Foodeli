@@ -10,7 +10,8 @@
   },
   "env": {
     "MONGODB_URL": "mongodb+srv://Foodeli_Admin:Batman1221@foodeli.k4f3jn8.mongodb.net/?retryWrites=true&w=majority&appName=Foodeli",
-    "JWT": "foodeli_secret_jwt_key_2026"
+    "JWT": "foodeli_secret_jwt_key_2026",
+    "GEOAPIFY_API_KEY": "5700b1c9c9014dc09643507ade9954ab"
   },
   "rewrites": [
     {
